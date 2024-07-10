@@ -1,0 +1,16 @@
+# https://developers.cloudflare.com/workers/wrangler/configuration
+
+# https://developers.cloudflare.com/workers/wrangler/configuration/#inheritable-keys
+name = "sync_complex_terms"
+main = "index.js"
+compatibility_date = "2024-07-18"
+workers_dev = false
+
+# https://developers.cloudflare.com/workers/configuration/cron-triggers
+[triggers]
+crons = ["0 */12 * * *"]
+
+[[d1_databases]]
+binding = "DB_Ontology" # i.e. available in a Worker on env.DB
+database_name = "Ontology.9488.2024-04-01"
+database_id = "6275cd70-3487-41e7-87a0-bd3123c0f10c"
