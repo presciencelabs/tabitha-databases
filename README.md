@@ -61,13 +61,13 @@ https://developers.cloudflare.com/workers/wrangler
 > `--local` only operates on the local copy and is the default in wrangler v3.33.0+
 > `--remote` operates on the remote database
 
-`wrangler d1 execute <DB_NAME> --file=./<DB_NAME>.tabitha.sqlite.sql`
+`wrangler d1 execute <DB_NAME> --file=<DB_NAME>.tabitha.sqlite.sql`
 
 `wrangler d1 execute <DB_NAME> --command="select part_of_speech, count(*) as count from Concepts group by part_of_speech order by count; select * from Version;"`
 
 ### Deployment
 
-D1 requires a worker so deployments will occur during the app deployment by virtue of the D1 binding.
+Check each databases's approach below.
 
 ## Ontology
 
