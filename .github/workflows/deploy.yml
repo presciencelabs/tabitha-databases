@@ -24,7 +24,7 @@ jobs:
          -
             uses: oven-sh/setup-bun@v2
          -
-            run: ls -lR
+            run: bun .github/workflows/init.js ${{ inputs.db_folder }} ${{ inputs.tbta_db_name }}
   #  config:
   #     runs-on: ubuntu-latest
 
