@@ -25,6 +25,12 @@ jobs:
             uses: oven-sh/setup-bun@v2
          -
             run: bun .github/workflows/init.js ${{ inputs.db_folder }} ${{ inputs.tbta_db_name }}
+         -
+            run: |
+               echo "inputs: ${{ toJSON(inputs) }}"
+               echo "env: ${{ toJSON(env) }}"
+               echo "secrets: ${{ toJSON(secrets) }}"
+
   #  config:
   #     runs-on: ubuntu-latest
 
