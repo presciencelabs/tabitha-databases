@@ -16,11 +16,11 @@ try {
 
 	check_for_existence(db_name_map.tbta)
 
-	return `
+	console.log(`
 		ABC=123
 		DEF=456
 		GHI=789
-	`
+	`)
 } catch (e) {
 	console.error(e)
 
