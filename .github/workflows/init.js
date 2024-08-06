@@ -1,5 +1,3 @@
-import { $ } from 'bun'
-
 // usage: `bun .github/workflows/init.js db_folder args`
 //
 // | db_folder  | args |
@@ -11,14 +9,18 @@ import { $ } from 'bun'
 const db_folder	= Bun.argv[2]
 const args			= Bun.argv.slice(3)
 
-await $`ls -l .`
-
 try {
 	const db_name_map = transform(args)
 
 	check_naming_convention(db_name_map)
 
 	check_for_existence(db_name_map.tbta)
+
+	return `
+		ABC=123
+		DEF=456
+		GHI=789
+	`
 } catch (e) {
 	console.error(e)
 
