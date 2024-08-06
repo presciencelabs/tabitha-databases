@@ -77,28 +77,26 @@ jobs:
       runs-on: ubuntu-latest
 
       steps:
-         - run: echo "${{ toJSON(needs.init.outputs) }}"
-
-         # -
-  #           uses: actions/checkout@v4
-  #        -
-  #           uses: oven-sh/setup-bun@v2
-  #        -
-  #           name: migrate Ontology from TBTA to TaBiThA
-  #           run: bun ${{ inputs.db_folder }}/migrate.js ./tbta_dbs_as_sqlite/${{ inputs.tbta_db_name }} ${{ inputs.db_folder }}/${{ needs.config.outputs.TABITHA_DB_NAME }}
-  #        -
-  #           name: Dump tables
-  #           # grep -v is because of https://developers.cloudflare.com/d1/build-with-d1/import-export-data/#convert-sqlite-database-files
-  #           run: sqlite3 ${{ inputs.db_folder }}/${{ needs.config.outputs.TABITHA_DB_NAME }} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${{ inputs.db_folder }}/${{ needs.config.outputs.TABITHA_DB_DUMP }}
-  #        -
-  #           name: Created files
-  #           run: ls -ltr ${{ inputs.db_folder }}/${{ needs.config.outputs.TABITHA_DB_NAME }}*
-  #        -
-  #           name: Store dump
-  #           uses: actions/upload-artifact@v4
-  #           with:
-  #              name: tabitha-dump
-  #              path: ${{ inputs.db_folder }}/${{ needs.config.outputs.TABITHA_DB_DUMP }}
+         -
+            uses: actions/checkout@v4
+         -
+            uses: oven-sh/setup-bun@v2
+         -
+            name: migrate Ontology from TBTA to TaBiThA
+            run: bun ${{ inputs.db_folder }}/migrate.js ./tbta_dbs_as_sqlite/${{ inputs.tbta_db_name }} ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}
+         -
+            name: Dump tables
+            # grep -v is because of https://developers.cloudflare.com/d1/build-with-d1/import-export-data/#convert-sqlite-database-files
+            run: sqlite3 ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_DUMP }}
+         -
+            name: Created files
+            run: ls -ltr ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}*
+         -
+            name: Store dump
+            uses: actions/upload-artifact@v4
+            with:
+               name: tabitha-dump
+               path: ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_DUMP }}
 
   #  deploy:
   #     needs: [config, migrate]
