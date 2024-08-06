@@ -77,7 +77,7 @@ jobs:
       runs-on: ubuntu-latest
 
       steps:
-         - run: echo "${{ needs.init.outputs }}"
+         - run: echo "${{ toJSON(needs.init.outputs) }}"
 
          # -
   #           uses: actions/checkout@v4
