@@ -8,7 +8,7 @@
 //
 
 const db_folder	= Bun.argv[2]
-const args			= Bun.argv.slice(2)
+const args			= Bun.argv.slice(3)
 
 try {
 	const db_name_map = transform(args)
