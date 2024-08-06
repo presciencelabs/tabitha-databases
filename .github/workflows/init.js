@@ -12,13 +12,13 @@ const args			= Bun.argv.slice(3)
 try {
 	const db_name_map = transform(args)
 
+	check_usage(db_name_map)
+
 	check_naming_convention(db_name_map)
 
 	check_for_existence(db_name_map.tbta)
 
-	console.log('TABITHA_DB_NAME=123')
-	console.log('TABITHA_DB_DUMP=456')
-	console.log('DEPLOY_DB_NAME=789')
+	generate_output(db_name_map)
 } catch (e) {
 	console.error(e)
 
@@ -43,11 +43,25 @@ function transform(db_names) {
 	}, {})
 }
 
-function check_naming_convention(mapper) {
+function check_usage(mapper) {
 	if (mapper.other?.length > 0) {
-		throw `Found ${mapper.other.length} invalid extension(s): ${mapper.other.join(', ')}`
+		throw `Valid extensions are mdb.sqlite and tabitha.sqlite only: ${mapper.other.join(', ')}`
 	}
 
+	if (mapper.tbta?.length < 1) {
+		throw 'There must be at least one tbta database'
+	}
+
+	if (mapper.tabitha?.length > 1) {
+		throw `There can only be one tabitha database when present: ${mapper.tabitha.join(', ')}`
+	}
+
+	if (mapper.tbta?.length > 1 && mapper.tabitha?.length < 1) {
+		throw 'There must be at least one tabitha database when there are multiple tbta databases'
+	}
+}
+
+function check_naming_convention(mapper) {
 	const db_names = Object.entries(mapper).map(([, db_names]) => db_names).flat()
 
 	for (const db_name of db_names) {
@@ -69,4 +83,17 @@ async function check_for_existence(tbta_db_names) {
 			throw `The TBTA database must be available in ${LOCATION}`
 		}
 	}
+}
+
+function generate_output({tabitha, tbta}) {
+	const name	= tabitha?.length > 0
+					? tabitha[0]
+					: tbta[0].replace('.mdb.', '.tabitha.')
+
+	const dump = `${name}.sql`
+	const deploy = name.replace('.tabitha.sqlite', '')
+
+	console.log(`TABITHA_DB_NAME=${name}`)
+	console.log(`TABITHA_DB_DUMP=${dump}`)
+	console.log(`DEPLOY_DB_NAME=${deploy}`)
 }
