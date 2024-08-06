@@ -16,11 +16,9 @@ try {
 
 	check_for_existence(db_name_map.tbta)
 
-	console.log(`
-		ABC=123
-		DEF=456
-		GHI=789
-	`)
+	console.log('TABITHA_DB_NAME=123')
+	console.log('TABITHA_DB_DUMP=456')
+	console.log('DEPLOY_DB_NAME=789')
 } catch (e) {
 	console.error(e)
 
