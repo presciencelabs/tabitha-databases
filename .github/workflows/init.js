@@ -1,3 +1,4 @@
+import { $ } from 'bun'
 
 // usage: `bun .github/workflows/init.js db_folder args`
 //
@@ -9,6 +10,8 @@
 
 const db_folder	= Bun.argv[2]
 const args			= Bun.argv.slice(3)
+
+await $`ls -l .`
 
 try {
 	const db_name_map = transform(args)
