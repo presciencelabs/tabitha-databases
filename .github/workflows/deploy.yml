@@ -24,12 +24,13 @@ jobs:
          -
             uses: oven-sh/setup-bun@v2
          -
+            id: vars
             run: bun .github/workflows/init.js ${{ inputs.db_folder }} ${{ inputs.tbta_db_name }} >> $GITHUB_OUTPUT
          -
             run: |
                echo "inputs: ${{ toJSON(inputs) }}"
                echo "env: ${{ toJSON(env) }}"
-               echo "steps: ${{ toJSON(steps) }}"
+               echo "steps: ${{ toJSON(steps.vars.outputs) }}"
                echo "secrets: ${{ toJSON(secrets) }}"
 
   #  config:
