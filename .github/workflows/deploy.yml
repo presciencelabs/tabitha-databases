@@ -30,7 +30,7 @@ jobs:
             run: |
                echo "inputs: ${{ toJSON(inputs) }}"
                echo "env: ${{ toJSON(env) }}"
-               echo "steps: ${{ toJSON(steps.vars) }}"
+               echo "steps: ${{ toJSON(steps) }}"
                echo "secrets: ${{ toJSON(secrets) }}"
 
   #  config:
