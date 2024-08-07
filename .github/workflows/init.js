@@ -18,7 +18,7 @@ try {
 
 	check_for_existence(db_name_map.tbta)
 
-	generate_output(db_name_map)
+	generate_output_for_github_actions(db_name_map)
 } catch (e) {
 	console.error(e)
 
@@ -85,7 +85,7 @@ async function check_for_existence(tbta_db_names) {
 	}
 }
 
-function generate_output({tabitha, tbta}) {
+function generate_output_for_github_actions({tabitha, tbta}) {
 	const name	= tabitha?.length > 0
 					? tabitha[0]
 					: tbta[0].replace('.mdb.', '.tabitha.')
