@@ -9,7 +9,7 @@ import { summarize_migration } from './summarize_migration'
 const tbta_db_name	 = Bun.argv[2]	// Ontology.VERSION.YYYY-MM-DD.mdb.sqlite
 const tabitha_db_name = Bun.argv[3]	// Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite
 
-const tbta_db	  = new Database(tbta_db_name)
+const tbta_db	  = new Database(`./tbta_dbs_as_sqlite/${tbta_db_name}`)
 const tabitha_db = new Database(tabitha_db_name)
 
 // drastic perf improvement: https://www.sqlite.org/pragma.html#pragma_journal_mode
