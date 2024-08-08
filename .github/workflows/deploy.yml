@@ -10,8 +10,13 @@ on:
                - ontology
                - sources
 
-         tbta_db_name:
-            description: 'Name of the TBTA mdb(s) converted to sqlite'
+         tbta_db_name_s:
+            description: 'Name of the TBTA mdb(s) that have been converted to sqlite and are needed for the migration'
+            type: string
+            required: true
+
+         tabitha_db_name:
+            description: 'Name of the TaBiThA sqlite database'
             type: string
             required: true
 
@@ -25,7 +30,7 @@ jobs:
             uses: oven-sh/setup-bun@v2
          -
             id: vars
-            run: bun .github/workflows/init.js ${{ inputs.db_folder }} ${{ inputs.tbta_db_name }} >> $GITHUB_OUTPUT
+            run: bun .github/workflows/init.js ${{ inputs.tbta_db_name_s }} ${{ inputs.tabitha_db_name }} >> $GITHUB_OUTPUT
          -
             run: |
                echo "inputs: ${{ toJSON(inputs) }}"
@@ -49,7 +54,7 @@ jobs:
             uses: oven-sh/setup-bun@v2
          -
             name: migrate TBTA data to TaBiThA
-            run: bun ${{ inputs.db_folder }}/migrate.js ${{ inputs.tbta_db_name }} ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}
+            run: bun ${{ inputs.db_folder }}/migrate.js ${{ inputs.tbta_db_name_s }} ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}
          -
             name: Dump tables
             # grep -v is because of https://developers.cloudflare.com/d1/build-with-d1/import-export-data/#convert-sqlite-database-files
@@ -102,7 +107,7 @@ jobs:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#execute
                # note: --remote is default in the CI apparently.
-               command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --file=./${{ needs.init.outputs.TABITHA_DB_DUMP }}
+               command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --file=${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_DUMP }}
          -
             name: Smoke test
             uses: cloudflare/wrangler-action@v3
