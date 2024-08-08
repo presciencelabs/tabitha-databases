@@ -8,49 +8,43 @@ on:
             type: choice
             options:
                - ontology
+               - sources
 
-         tbta_db_name:
-            description: 'Name of the TBTA mdb converted to sqlite'
+         tbta_db_name_s:
+            description: 'Name of the TBTA mdb(s) that have been converted to sqlite and are needed for the migration'
+            type: string
+            required: true
+
+         tabitha_db_name:
+            description: 'Name of the TaBiThA sqlite database'
             type: string
             required: true
 
 jobs:
-   config:
+   init:
       runs-on: ubuntu-latest
-
-      steps:
-         -
-            run: echo "TABITHA_DB_NAME=$(echo ${{ inputs.tbta_db_name }} | sed 's/mdb/tabitha/')" >> $GITHUB_ENV
-         -
-            run: echo "TABITHA_DB_DUMP=${{ env.TABITHA_DB_NAME }}.sql" >> $GITHUB_ENV
-         -
-            run: echo "DEPLOY_DB_NAME=$(echo ${{ env.TABITHA_DB_NAME }} | sed 's/.tabitha.sqlite//')" >> $GITHUB_ENV
-         -
-            run: |
-               echo "inputs: ${{ toJSON(inputs) }}"
-               echo "env: ${{ toJSON(env) }}"
-               echo "secrets: ${{ toJSON(secrets) }}"
-
-      outputs:
-         TABITHA_DB_NAME: ${{ env.TABITHA_DB_NAME }}
-         TABITHA_DB_DUMP: ${{ env.TABITHA_DB_DUMP }}
-         DEPLOY_DB_NAME: ${{ env.DEPLOY_DB_NAME }}
-
-   verify:
-      runs-on: ubuntu-latest
-
       steps:
          -
             uses: actions/checkout@v4
          -
-            name: Verify file naming convention (must end with `.mdb.sqlite`)
-            run: ${{ endsWith(inputs.tbta_db_name, '.mdb.sqlite') }}
+            uses: oven-sh/setup-bun@v2
          -
-            name: Check for existence of file
-            run: test -f ./tbta_dbs_as_sqlite/${{ inputs.tbta_db_name }}
+            id: vars
+            run: bun .github/workflows/init.js ${{ inputs.tbta_db_name_s }} ${{ inputs.tabitha_db_name }} >> $GITHUB_OUTPUT
+         -
+            run: |
+               echo "inputs: ${{ toJSON(inputs) }}"
+               echo "env: ${{ toJSON(env) }}"
+               echo "steps: ${{ toJSON(steps) }}"
+               echo "secrets: ${{ toJSON(secrets) }}"
+
+      outputs:
+         TABITHA_DB_NAME: ${{ steps.vars.outputs.TABITHA_DB_NAME }}
+         TABITHA_DB_DUMP: ${{ steps.vars.outputs.TABITHA_DB_DUMP }}
+         DEPLOY_DB_NAME: ${{ steps.vars.outputs.DEPLOY_DB_NAME }}
 
    migrate:
-      needs: [config, verify]
+      needs: init
       runs-on: ubuntu-latest
 
       steps:
@@ -59,24 +53,24 @@ jobs:
          -
             uses: oven-sh/setup-bun@v2
          -
-            name: migrate Ontology from TBTA to TaBiThA
-            run: bun ${{ inputs.db_folder }}/migrate.js ./tbta_dbs_as_sqlite/${{ inputs.tbta_db_name }} ${{ inputs.db_folder }}/${{ needs.config.outputs.TABITHA_DB_NAME }}
+            name: migrate TBTA data to TaBiThA
+            run: bun ${{ inputs.db_folder }}/migrate.js ${{ inputs.tbta_db_name_s }} ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}
          -
             name: Dump tables
             # grep -v is because of https://developers.cloudflare.com/d1/build-with-d1/import-export-data/#convert-sqlite-database-files
-            run: sqlite3 ${{ inputs.db_folder }}/${{ needs.config.outputs.TABITHA_DB_NAME }} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${{ inputs.db_folder }}/${{ needs.config.outputs.TABITHA_DB_DUMP }}
+            run: sqlite3 ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_DUMP }}
          -
             name: Created files
-            run: ls -ltr ${{ inputs.db_folder }}/${{ needs.config.outputs.TABITHA_DB_NAME }}*
+            run: ls -ltr ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}*
          -
             name: Store dump
             uses: actions/upload-artifact@v4
             with:
                name: tabitha-dump
-               path: ${{ inputs.db_folder }}/${{ needs.config.outputs.TABITHA_DB_DUMP }}
+               path: ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_DUMP }}
 
    deploy:
-      needs: [config, migrate]
+      needs: [init, migrate]
       runs-on: ubuntu-latest
 
       steps:
@@ -105,7 +99,7 @@ jobs:
             with:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#create
-               command: d1 create ${{ needs.config.outputs.DEPLOY_DB_NAME }}
+               command: d1 create ${{ needs.init.outputs.DEPLOY_DB_NAME }}
          -
             name: Load data
             uses: cloudflare/wrangler-action@v3
@@ -113,7 +107,7 @@ jobs:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#execute
                # note: --remote is default in the CI apparently.
-               command: d1 execute ${{ needs.config.outputs.DEPLOY_DB_NAME }} --file=./${{ needs.config.outputs.TABITHA_DB_DUMP }}
+               command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --file=${{ needs.init.outputs.TABITHA_DB_DUMP }}
          -
             name: Smoke test
             uses: cloudflare/wrangler-action@v3
@@ -121,4 +115,4 @@ jobs:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#execute
                # note: --remote is default in the CI apparently.
-               command: d1 execute ${{ needs.config.outputs.DEPLOY_DB_NAME }} --command="select name from sqlite_master"
+               command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --command="select name from sqlite_master"
