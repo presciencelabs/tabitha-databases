@@ -9,6 +9,7 @@ on:
             options:
                - ontology
                - sources
+               - targets
 
          tbta_db_name_s:
             description: 'Name of the TBTA mdb(s) that have been converted to sqlite and are needed for the migration'
