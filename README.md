@@ -107,3 +107,13 @@ From within the `complex_terms` dir:
 1. Once in a sqlite format, it should be committed to the `tbta_dbs_as_sqlite` directory following appropriate naming convention.
 	> e.g., `Bible.YYYY-MM-DD.mdb.sqlite Community_Development_Texts.YYYY-MM-DD.mdb.sqlite Grammar_Introduction.YYYY-MM-DD.mdb.sqlite`
 1. Run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
+
+## Targets
+
+### When a new English project is available from TBTA in `mdb` format.
+
+1. Convert the `mdb` to a sqlite database
+	> ⚠️ Can't seem to find a commandline tool for this... until something else presents itself, it will need to be done manually.
+1. Once in a sqlite format, it should be committed to the `tbta_dbs_as_sqlite` directory following appropriate naming convention.
+	> e.g., `English.YYYY-MM-DD.mdb.sqlite`
+1. Run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
