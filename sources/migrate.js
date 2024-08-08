@@ -1,8 +1,8 @@
 import {Database} from 'bun:sqlite'
 
 // usage: `bun migrate.js Bible.YYYY-MM-DD.mdb.sqlite Community_Development_Texts.YYYY-MM-DD.mdb.sqlite Grammar_Introduction.YYYY-MM-DD.mdb.sqlite Sources.YYYY-MM-DD.tabitha.sqlite`
-const tabitha_db_name 			= Bun.argv.at(-1)
 const tbta_sources_from_input = Bun.argv.slice(2, -1)
+const tabitha_db_name 			= Bun.argv.at(-1)
 
 const tabitha_sources_db = new Database(tabitha_db_name)
 
