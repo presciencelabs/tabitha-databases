@@ -97,3 +97,13 @@ From within the `complex_terms` dir:
 
 1. Ensure the correct database binding is set in `wrangler.toml`
 1. From within `./complex_terms/` run `wrangler deploy`
+
+## Sources
+
+### When a new Bible, Community Development Text, or Grammar Introduction is available from TBTA in `mdb` format.
+
+1. Convert the `mdbs` to their respective sqlite databases
+	> ⚠️ Can't seem to find a commandline tool for this... until something else presents itself, it will need to be done manually.
+1. Once in a sqlite format, it should be committed to the `tbta_dbs_as_sqlite` directory following appropriate naming convention.
+	> e.g., `Bible.YYYY-MM-DD.mdb.sqlite Community_Development_Texts.YYYY-MM-DD.mdb.sqlite Grammar_Introduction.YYYY-MM-DD.mdb.sqlite`
+1. Run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
