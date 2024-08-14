@@ -9,9 +9,9 @@ const parts_of_speech = [
 ]
 
 const part_of_speech = argv[2]
-if (!parts_of_speech.includes(part_of_speech)) {
-	console.error('part of speech is required and must be one of these: ', parts_of_speech)
-	console.error('usage: node to_csv.mjs <part of speech> < <input file>')
+if (! parts_of_speech.includes(part_of_speech)) {
+	console.error(`${part_of_speech} is not valid`)
+	console.error(`usage: node to_csv.mjs [${parts_of_speech.join('|')}] < <input file>`)
 
 	process.exit(1)
 }

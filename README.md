@@ -112,7 +112,7 @@ From within the `complex_terms` dir:
 
 ### When any new project is available from TBTA in `mdb` format.
 
-1. Ensure the inflection `.csv`'s have been newly created with the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
+1. Ensure the inflections have been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
 1. Convert the `mdb` to a sqlite database and place in the `tbta_dbs_as_sqlite` directory with appropriate naming convention.
 	> ⚠️ Can't seem to find a commandline tool for this... until something else presents itself, it will need to be done manually.
 

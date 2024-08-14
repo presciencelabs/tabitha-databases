@@ -22,6 +22,9 @@ in "take" and that stem has a chance to be found.
 # Preparing for database load
 
 1. Place all `*.win.txt` files into the `win` directory
-1. run `./transform.sh`
+
+## Local dev and test
+
+run `./transform.sh` after files have been placed into the `win` directory
 
 This script will populate `csv` with the newly transformed files

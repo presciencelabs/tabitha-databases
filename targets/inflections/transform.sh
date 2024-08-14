@@ -1,6 +1,10 @@
 #!/bin/bash
 
-for win_file in win/*; do
+set -e # exit if any command fails
+
+dir=${1:-.}
+
+for win_file in $dir/win/*; do
 	# win_file = win/lexical_forms_nouns.win.txt
 
 	unix_file=$(basename $win_file | sed 's/\.win//')
@@ -12,7 +16,7 @@ for win_file in win/*; do
 	#	\12 = newline
 	#	\15 = carriage return
 	#	\40-\176 = printable ASCII characters
-	tr -cd '\11\12\15\40-\176' < $win_file > unix/$unix_file
+	tr -cd '\11\12\15\40-\176' < $win_file > $dir/unix/$unix_file
 
 	part_of_speech_file=$(echo $unix_file | sed -E 's/lexical_forms_(.*)\.txt$/\1\.csv/')
 	# part_of_speech_file = nouns.csv
@@ -21,5 +25,5 @@ for win_file in win/*; do
 	# part_of_speech = Noun
 
 	echo "transforming unix/$unix_file => $part_of_speech_file"
-	cat unix/$unix_file | node to_csv.mjs $part_of_speech > csv/$part_of_speech_file
+	cat $dir/unix/$unix_file | bun $dir/to_csv.mjs $part_of_speech > $dir/csv/$part_of_speech_file
 done
