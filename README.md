@@ -110,10 +110,12 @@ From within the `complex_terms` dir:
 
 ## Targets
 
-### When a new English project is available from TBTA in `mdb` format.
+### When any new project is available from TBTA in `mdb` format.
 
-1. Convert the `mdb` to a sqlite database
+1. Ensure the inflection `.csv`'s have been newly created with the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
+1. Convert the `mdb` to a sqlite database and place in the `tbta_dbs_as_sqlite` directory with appropriate naming convention.
 	> ⚠️ Can't seem to find a commandline tool for this... until something else presents itself, it will need to be done manually.
-1. Once in a sqlite format, it should be committed to the `tbta_dbs_as_sqlite` directory following appropriate naming convention.
-	> e.g., `English.YYYY-MM-DD.mdb.sqlite`
-1. Run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
+
+	> Example naming convention: `English.YYYY-MM-DD.mdb.sqlite`
+1. Once the new sqlite db and the inflections are in place, they can be part of the same `commit` and pushed.
+1. Manually run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
