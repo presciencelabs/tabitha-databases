@@ -2,8 +2,13 @@ import { find_word_context } from './example_context'
 import { transform_semantic_encoding } from './semantic_encoding'
 import { Database } from 'bun:sqlite'
 
-const db_sources = new Database('Sources.2024-07-09.tabitha.sqlite')
-const db_ontology = new Database('Ontology.9489.2024-06-31.tabitha.sqlite')
+// usage: `bun exhaustive_examples/index.js Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite Sources.YYYY-MM-DD.tabitha.sqlite`
+const ontology_db_name	 = Bun.argv[2]	// Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite
+const sources_db_name = Bun.argv[3]	// Sources.YYYY-MM-DD.tabitha.sqlite
+
+// the databases are currently expected to be in the root folder of the repo
+const db_ontology = new Database(ontology_db_name)
+const db_sources = new Database(sources_db_name)
 
 db_ontology.exec('PRAGMA journal_mode = WAL')
 
@@ -23,7 +28,6 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 	const all_sources = db_sources.query(`
 		SELECT type, id_primary, id_secondary, id_tertiary, semantic_encoding
 		FROM Sources
-		--WHERE id_primary IN ('Ruth', 'Jonah', 'Clauses')
 	`).all()
 	console.log(`Fetched ${all_sources.length} verses`)
 
@@ -42,7 +46,7 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 				const examples = context_arguments.map(context => JSON.stringify({ reference, context })).join('\n')
 				const { stem, sense, part_of_speech } = JSON.parse(concept_key)
 				
-				// TODO only update the concepts every chapter instead of every verse?
+				// TODO only update the concepts every chapter/book instead of every verse?
 				db_ontology.query(`
 					UPDATE Concepts
 					SET examples = examples || ?, occurrences = occurrences + ?
