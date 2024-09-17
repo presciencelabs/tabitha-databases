@@ -23,6 +23,5 @@ type ContextArguments = Record<string, string>
 
 type Feature = {
 	index: number
-	labels: Record<string, string>
-	letters: Record<string, string>
+	values: Record<string, string>
 }

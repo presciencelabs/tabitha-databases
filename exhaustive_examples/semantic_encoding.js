@@ -2,24 +2,9 @@
 /** @type {{ [string]: { [string]: Feature } }} */
 export const FEATURES = {
 	NP: {
-		SEQUENCE: {
-			index: 0,
-			labels: {
-				'S': 'Not in a Sequence',
-				'F': 'First Coordinate',
-				'L': 'Last Coordinate',
-				'C': 'Coordinate',
-			},
-			letters: {
-				'Not in a Sequence': 'S',
-				'First Coordinate': 'F',
-				'Last Coordinate': 'L',
-				'Coordinate': 'C',
-			},
-		},
 		SEMANTIC_ROLE: {
 			index: 1,
-			labels: {
+			values: {
 				'A': 'Agent',
 				'P': 'Patient',
 				'S': 'State',
@@ -30,35 +15,23 @@ export const FEATURES = {
 				'D': 'Addressee',
 				'N': 'Oblique',
 			},
-			letters: {
-				'Agent': 'A',
-				'Patient': 'P',
-				'State': 'S',
-				'Source': 's',
-				'Destination': 'd',
-				'Beneficiary': 'B',
-				'Instrument': 'I',
-				'Addressee': 'D',
-				'Oblique': 'N',
-			},
 		},
 	},
 	VERB: {
 		POLARITY: {
 			index: 6,
-			labels: {
+			values: {
 				'A': 'Affirmative',
 				'N': 'Negative',
 				'E': 'Emphatic Affirmative',
 				'e': 'Emphatic Negative',
 			},
-			letters: {},
 		},
 	},
 	ADJ: {
 		DEGREE: {
 			index: 2,
-			labels: {
+			values: {
 				'N': 'No Degree',
 				'C': 'Comparative',
 				'S': 'Superlative',
@@ -72,41 +45,21 @@ export const FEATURES = {
 				'c': "Intensified 'less'",
 				's': 'Superlative of 2 items',
 			},
-			letters: {},	// unused
 		},
 	},
 	ADJP: {
-		SEQUENCE: {
-			index: 0,
-			labels: {
-				'S': 'Not in a Sequence',
-				'F': 'First Coordinate',
-				'L': 'Last Coordinate',
-				'C': 'Coordinate',
-			},
-			letters: {
-				'Not in a Sequence': 'S',
-				'First Coordinate': 'F',
-				'Last Coordinate': 'L',
-				'Coordinate': 'C',
-			},
-		},
 		USAGE: {
 			index: 1,
-			labels: {
+			values: {
 				'A': 'Attributive',
 				'P': 'Predicative',
-			},
-			letters: {
-				'Attributive': 'A',
-				'Predicative': 'P',
 			},
 		},
 	},
 	ADV: {
 		DEGREE: {
 			index: 2,
-			labels: {
+			values: {
 				'N': 'No Degree',
 				'C': 'Comparative',
 				'S': 'Superlative',
@@ -116,13 +69,12 @@ export const FEATURES = {
 				'L': "'less'",
 				'l': "'least'",
 			},
-			letters: {},	// unused
 		},
 	},
 	CLAUSE: {
 		TYPE: {
 			index: 0,
-			labels: {
+			values: {
 				'I': 'Independent',
 				'C': 'Coordinate Independent',
 				'T': 'Restrictive Relative Clause',
@@ -133,39 +85,12 @@ export const FEATURES = {
 				'p': 'Attributive Patient',
 				'Q': 'Closing Quotation Frame',
 			},
-			letters: {
-				'Independent': 'I',
-				'Coordinate Independent': 'C',
-				'Restrictive Relative Clause': 'T',
-				'Descriptive Relative Clause': 't',
-				'Adverbial Clause': 'E',
-				'Propositional Agent': 'A',
-				'Propositional Patient': 'P',
-				'Attributive Patient': 'p',
-				'Closing Quotation Frame': 'Q',
-			},
 		},
 		TOPIC_NP: {
 			index: 2,
-			labels: {
+			values: {
 				'p': 'Most Agent-Like',
 				'P': 'Most Patient-Like',
-			},
-			letters: {},	// unused
-		},
-		SEQUENCE: {
-			index: 12,
-			labels: {
-				'N': 'Not in a Sequence',
-				'F': 'First Coordinate',
-				'L': 'Last Coordinate',
-				'C': 'Coordinate',
-			},
-			letters: {
-				'Not in a Sequence': 'N',
-				'First Coordinate': 'F',
-				'Last Coordinate': 'L',
-				'Coordinate': 'C',
 			},
 		},
 	},
