@@ -2,9 +2,9 @@ import { find_word_context } from './example_context'
 import { transform_semantic_encoding } from './semantic_encoding'
 import { Database } from 'bun:sqlite'
 
-// usage: `bun exhaustive_examples/index.js Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite Sources.YYYY-MM-DD.tabitha.sqlite`
-const ontology_db_name	 = Bun.argv[2]	// Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite
-const sources_db_name = Bun.argv[3]	// Sources.YYYY-MM-DD.tabitha.sqlite
+// usage: `bun exhaustive_examples/load.js Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite Sources.YYYY-MM-DD.tabitha.sqlite`
+const ontology_db_name	 = Bun.argv[2]
+const sources_db_name = Bun.argv[3]
 
 // the databases are currently expected to be in the root folder of the repo
 const db_ontology = new Database(ontology_db_name)
@@ -31,13 +31,16 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 	`).all()
 	console.log(`Fetched ${all_sources.length} verses`)
 
-	let current_book = ''
+	let current_reference = { type: '', id_primary: '', id_secondary: '', id_tertiary: '' }
 	for (const { semantic_encoding, ...reference } of all_sources) {
-		if (reference.id_primary !== current_book) {
-			current_book = reference.id_primary
+		if (reference.id_primary !== current_reference.id_primary) {
 			console.log()
-			console.log(`Collecting occurrences within ${current_book}:`)
+			console.log(`Collecting occurrences within ${reference.id_primary}:`)
 		}
+		if (reference.id_secondary !== current_reference.id_secondary) {
+			await Bun.write(Bun.stdout, reference.id_secondary)
+		}
+		current_reference = reference
 
 		// For each word encountered, add the current verse reference to that word's examples
 		transform_semantic_encoding(semantic_encoding)
@@ -46,7 +49,6 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 				const examples = context_arguments.map(context => JSON.stringify({ reference, context })).join('\n')
 				const { stem, sense, part_of_speech } = JSON.parse(concept_key)
 				
-				// TODO only update the concepts every chapter/book instead of every verse?
 				db_ontology.query(`
 					UPDATE Concepts
 					SET examples = examples || ?, occurrences = occurrences + ?

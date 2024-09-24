@@ -26,7 +26,7 @@ function transform_tbta_data(tbta_db) {
 						Roots							AS stem,
 						''								AS sense,
 						'${part_of_speech}'		AS part_of_speech,
-						0					AS occurrences,
+						0						AS occurrences,
 						"LN Gloss"					AS gloss,
 						"Brief Gloss"				AS brief_gloss,
 						Categories					AS categorization,

@@ -221,19 +221,20 @@ function find_containing_clause(index, source_entities) {
 function get_head_word(phrase_index, source_entities) {
 	const phrase_type = source_entities[phrase_index].label
 	const word_type = {
-		NP: 'Noun',
-		VP: 'Verb',
-		AdjP: 'Adjective',
-		AdvP: 'Adverb',
+		NP: ['Noun', 'Phrasal'],	// some NPs contain Phrasals that represent Nouns, so we need to consider both
+		VP: ['Verb'],
+		AdjP: ['Adjective'],
+		AdvP: ['Adverb'],
 	}[phrase_type] ?? ''
 
 	const head_index = find_entity_after(
-		entity => entity.label === word_type,
+		entity => word_type.includes(entity.label),
 		{ skip_phrases: true, skip_clauses: true, break_condition: is_closing_phrase }
 	)(phrase_index, source_entities)
 
 	if (head_index === -1) {
-		throw new Error(`Invalid semantic encoding - missing head ${word_type} in ${phrase_type}`)
+		console.error(`Invalid semantic encoding - missing head ${word_type} in ${phrase_type}`)
+		return { type: '', label: word_type[0], features: '......................', value: '', sense: '' }
 	}
 	return source_entities[head_index]
 }
