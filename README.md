@@ -119,3 +119,23 @@ From within the `complex_terms` dir:
 	> Example naming convention: `English.YYYY-MM-DD.mdb.sqlite`
 1. Once the new sqlite db and the inflections are in place, they can be part of the same `commit` and pushed.
 1. Manually run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
+
+### Local migration
+
+#### Ontology
+To create the Tabitha database from mdb:
+
+`bun ontology/migrate.js Ontology.VERSION.YYYY-MM-DD.mdb.sqlite Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
+
+To dump to an sql file that can be executed on the wrangler db:
+
+`sqlite3 Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite .dump > Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite.sql`
+
+#### Sources
+To create the Tabitha database from mdb:
+
+`bun sources/migrate.js Bible.YYYY-MM-DD.mdb.sqlite Community_Development_Texts.YYYY-MM-DD.mdb.sqlite Grammar_Introduction.YYYY-MM-DD.mdb.sqlite Sources.YYYY-MM-DD.tabitha.sqlite`
+
+To dump to an sql file that can be executed on the wrangler db:
+
+`sqlite3 Sources.2024-07-09.tabitha.sqlite .dump > Sources.2024-07-09.tabitha.sqlite.sql`
