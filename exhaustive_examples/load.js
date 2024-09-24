@@ -12,9 +12,40 @@ const db_sources = new Database(sources_db_name)
 
 db_ontology.exec('PRAGMA journal_mode = WAL')
 
+create_or_clear_examples_table(db_ontology)
 await find_exhaustive_occurrences(db_sources, db_ontology)
+update_occurrences(db_ontology)
+
+console.log('Optimizing Ontology db...')
+db_ontology.query('VACUUM').run()
+console.log('done.')
 
 show_examples(db_ontology)
+show_top_occurrences(db_ontology)
+
+
+/** @param {import('bun:sqlite').Database} db_ontology */
+function create_or_clear_examples_table(db_ontology) {
+	console.log(`Creating and/or clearing ExhaustiveExamples table in ${db_ontology.filename}...`)
+
+	db_ontology.query(`
+		CREATE TABLE IF NOT EXISTS ExhaustiveExamples (
+			concept_stem			TEXT,
+			concept_sense			TEXT,
+			concept_part_of_speech	TEXT,
+			ref_type				TEXT,
+			ref_id_primary			TEXT,
+			ref_id_secondary		TEXT,
+			ref_id_tertiary			TEXT,
+			context					TEXT
+		)
+	`).run()
+
+	db_ontology.query('DELETE FROM ExhaustiveExamples').run()
+	db_ontology.query('UPDATE Concepts SET occurrences = 0').run()
+
+	console.log('done.')
+}
 
 /**
  * 
@@ -22,38 +53,35 @@ show_examples(db_ontology)
  * @param {Database} db_ontology 
  */
 async function find_exhaustive_occurrences(db_sources, db_ontology) {
-	db_ontology.query('UPDATE Concepts SET examples = "", occurrences = 0').run()
-
 	console.log('Fetching all source encoding...')
 	const all_sources = db_sources.query(`
 		SELECT type, id_primary, id_secondary, id_tertiary, semantic_encoding
 		FROM Sources
+		WHERE id_primary IN ('Ruth', 'Jonah')
 	`).all()
 	console.log(`Fetched ${all_sources.length} verses`)
 
-	let current_reference = { type: '', id_primary: '', id_secondary: '', id_tertiary: '' }
-	for (const { semantic_encoding, ...reference } of all_sources) {
-		if (reference.id_primary !== current_reference.id_primary) {
+	let current_reference = { id_primary: '', id_secondary: '' }
+	for (const { semantic_encoding, type, id_primary, id_secondary, id_tertiary } of all_sources) {
+		if (id_primary !== current_reference.id_primary) {
 			console.log()
-			console.log(`Collecting occurrences within ${reference.id_primary}:`)
+			console.log(`Collecting occurrences within ${id_primary}:`)
 		}
-		if (reference.id_secondary !== current_reference.id_secondary) {
-			await Bun.write(Bun.stdout, reference.id_secondary)
+		if (id_secondary !== current_reference.id_secondary) {
+			// This is helpful to identify verses where an error occurs
+			await Bun.write(Bun.stdout, id_secondary)
 		}
-		current_reference = reference
+		current_reference = { id_primary, id_secondary }
 
 		// For each word encountered, add the current verse reference to that word's examples
 		transform_semantic_encoding(semantic_encoding)
-			.reduce(group_examples_by_concept, new Map())
-			.forEach((context_arguments, concept_key) => {
-				const examples = context_arguments.map(context => JSON.stringify({ reference, context })).join('\n')
-				const { stem, sense, part_of_speech } = JSON.parse(concept_key)
-				
+			.map((entity, index, source_entities) => entity.sense ? [entity, find_word_context(index, source_entities)] : [])
+			.filter(pair => pair.length)
+			.forEach(([entity, context]) => {
 				db_ontology.query(`
-					UPDATE Concepts
-					SET examples = examples || ?, occurrences = occurrences + ?
-					WHERE stem = ? AND sense = ? AND part_of_speech = ?
-				`).run(`${examples}\n`, examples.length, stem, sense, part_of_speech)
+					INSERT INTO ExhaustiveExamples (concept_stem, concept_sense, concept_part_of_speech, ref_type, ref_id_primary, ref_id_secondary, ref_id_tertiary, context)
+					VALUES (?,?,?,?,?,?,?,?)
+				`).run(entity.value, entity.sense, entity.label, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context))
 			})
 
 		await Bun.write(Bun.stdout, '.')
@@ -61,37 +89,38 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 
 	console.log()
 	console.log('done!')
-
-	console.log('Optimizing Ontology db...')
-	db_ontology.query('VACUUM').run()
-	console.log('done.')
 }
 
 /**
  * 
- * @param {Map<Concept, ContextArguments[]>} concept_map 
- * @param {SourceEntity} entity 
- * @param {number} index 
- * @param {SourceEntity[]} source_entities 
- * @returns 
+ * @param {Database} db_ontology 
  */
-function group_examples_by_concept(concept_map, entity, index, source_entities) {
-	if (!entity.sense) {
-		return concept_map
-	}
+async function update_occurrences(db_ontology) {
+	console.log('Updating occurrences count for each concept...')
+	const concept_occurrences = db_ontology.query(`
+		SELECT concept_stem AS stem,
+			concept_sense AS sense,
+			concept_part_of_speech AS part_of_speech,
+			COUNT(context) AS occurrences
+		FROM ExhaustiveExamples
+		GROUP BY concept_stem,
+			concept_sense,
+			concept_part_of_speech
+	`).all()
 
-	const concept = JSON.stringify({
-		stem: entity.value,
-		sense: entity.sense,
-		part_of_speech: entity.label,
+	concept_occurrences.forEach(async ({ stem, sense, part_of_speech, occurrences }, index) => {
+		db_ontology.query(`
+			UPDATE Concepts
+			SET occurrences = ?
+			WHERE stem = ? AND sense = ? AND part_of_speech = ?
+		`).run(occurrences, stem, sense, part_of_speech)
+
+		if (index % 100 === 0) {
+			await Bun.write(Bun.stdout, '.')
+		}
 	})
 
-	const context_arguments = find_word_context(index, source_entities)
-	const examples = concept_map.get(concept) ?? []
-	examples.push(context_arguments)
-	concept_map.set(concept, examples)
-
-	return concept_map
+	console.log('done!')
 }
 
 /**
@@ -159,20 +188,32 @@ function show_examples(db_ontology) {
 	 * @param {Concept} concept 
 	 * @param {Reference} reference 
 	 */
-	function show_examples(concept, reference) {
-		const { examples } = db_ontology.query(`
-			SELECT examples
-			FROM Concepts
-			WHERE stem = ? AND sense = ? AND part_of_speech = ?
-		`).get(concept.stem, concept.sense, concept.part_of_speech)
+	function show_examples({ stem, sense, part_of_speech }, { id_primary, id_secondary, id_tertiary }) {
+		const examples = db_ontology.query(`
+			SELECT context
+			FROM ExhaustiveExamples
+			WHERE concept_stem = ? AND concept_sense = ? AND concept_part_of_speech = ? AND ref_id_primary = ? AND ref_id_secondary = ? AND ref_id_tertiary = ?
+		`).all(stem, sense, part_of_speech, id_primary, id_secondary, id_tertiary)
 
-		const reference_string = JSON.stringify(reference)
-		const examples_to_show = examples.split('\n')
-			.filter(example_json => example_json.includes(reference_string))
-			.join('\n')
-
-		console.log(`----- ${concept.stem}-${concept.sense} in ${reference.id_primary} ${reference.id_secondary}:${reference.id_tertiary} -----`)
-		console.log(examples_to_show)
+		console.log(`----- ${stem}-${sense} in ${id_primary} ${id_secondary}:${id_tertiary} -----`)
+		for (const { context } of examples) {
+			console.log(context)
+		}
 		console.log()
 	}
+}
+
+/**
+ * 
+ * @param {Database} db_ontology 
+ */
+function show_top_occurrences(db_ontology) {
+	const top_occurrences = db_ontology.query(`
+		SELECT stem, sense, part_of_speech, occurrences
+		FROM Concepts
+		ORDER BY occurrences + 0 DESC
+		LIMIT 10
+	`).all()
+
+	console.table(top_occurrences)
 }
