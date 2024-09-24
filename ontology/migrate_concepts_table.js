@@ -71,7 +71,7 @@ function load_data(tabitha_db, transformed_data) {
 	transformed_data.map(async ({id, stem, part_of_speech, occurrences, gloss, brief_gloss, categorization, curated_examples, level}) => {
 		tabitha_db.query(`
 			INSERT INTO Concepts (id, stem, part_of_speech, occurrences, gloss, brief_gloss, categorization, curated_examples, level)
-			VALUES (?,?,?,?,?,?,?,?,?,?)
+			VALUES (?,?,?,?,?,?,?,?,?)
 		`).run(id, stem, part_of_speech, occurrences, gloss, brief_gloss, categorization, curated_examples, level)
 
 		await Bun.write(Bun.stdout, '.')

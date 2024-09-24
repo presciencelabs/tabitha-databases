@@ -97,28 +97,21 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
  */
 async function update_occurrences(db_ontology) {
 	console.log('Updating occurrences count for each concept...')
-	const concept_occurrences = db_ontology.query(`
-		SELECT concept_stem AS stem,
-			concept_sense AS sense,
-			concept_part_of_speech AS part_of_speech,
-			COUNT(context) AS occurrences
-		FROM ExhaustiveExamples
-		GROUP BY concept_stem,
-			concept_sense,
-			concept_part_of_speech
-	`).all()
-
-	concept_occurrences.forEach(async ({ stem, sense, part_of_speech, occurrences }, index) => {
-		db_ontology.query(`
-			UPDATE Concepts
-			SET occurrences = ?
-			WHERE stem = ? AND sense = ? AND part_of_speech = ?
-		`).run(occurrences, stem, sense, part_of_speech)
-
-		if (index % 100 === 0) {
-			await Bun.write(Bun.stdout, '.')
-		}
-	})
+	
+	db_ontology.query(`
+		UPDATE Concepts
+		SET occurrences = Examples.occurrences
+		FROM (SELECT concept_stem AS stem,
+				concept_sense AS sense,
+				concept_part_of_speech AS part_of_speech,
+				COUNT(context) AS occurrences
+			FROM ExhaustiveExamples
+			GROUP BY concept_stem,
+				concept_sense,
+				concept_part_of_speech
+		) AS Examples
+		WHERE Concepts.stem = Examples.stem AND Concepts.sense = Examples.sense AND Concepts.part_of_speech = Examples.part_of_speech
+	`).run()
 
 	console.log('done!')
 }
