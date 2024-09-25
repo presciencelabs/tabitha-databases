@@ -97,14 +97,13 @@ async function update_occurrences(db_ontology) {
 	db_ontology.query(`
 		UPDATE Concepts
 		SET occurrences = Examples.occurrences
-		FROM (SELECT concept_stem AS stem,
-				concept_sense AS sense,
-				concept_part_of_speech AS part_of_speech,
-				COUNT(context) AS occurrences
+		FROM (
+			SELECT	concept_stem AS stem,
+						concept_sense AS sense,
+						concept_part_of_speech AS part_of_speech,
+						COUNT(context) AS occurrences
 			FROM Exhaustive_Examples
-			GROUP BY concept_stem,
-				concept_sense,
-				concept_part_of_speech
+			GROUP BY stem, sense, part_of_speech
 		) AS Examples
 		WHERE Concepts.stem = Examples.stem AND Concepts.sense = Examples.sense AND Concepts.part_of_speech = Examples.part_of_speech
 	`).run()
