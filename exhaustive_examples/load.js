@@ -6,7 +6,6 @@ import { Database } from 'bun:sqlite'
 const ontology_db_name	 = Bun.argv[2]
 const sources_db_name = Bun.argv[3]
 
-// the databases are currently expected to be in the root folder of the repo
 const db_ontology = new Database(ontology_db_name)
 const db_sources = new Database(sources_db_name)
 
@@ -26,31 +25,30 @@ show_top_occurrences(db_ontology)
 
 /** @param {import('bun:sqlite').Database} db_ontology */
 function create_or_clear_examples_table(db_ontology) {
-	console.log(`Creating and/or clearing ExhaustiveExamples table in ${db_ontology.filename}...`)
+	console.log(`Creating and/or clearing Exhaustive_Examples table in ${db_ontology.filename}...`)
 
 	db_ontology.query(`
-		CREATE TABLE IF NOT EXISTS ExhaustiveExamples (
-			concept_stem			TEXT,
-			concept_sense			TEXT,
+		CREATE TABLE IF NOT EXISTS Exhaustive_Examples (
+			concept_stem				TEXT,
+			concept_sense				TEXT,
 			concept_part_of_speech	TEXT,
-			ref_type				TEXT,
-			ref_id_primary			TEXT,
-			ref_id_secondary		TEXT,
+			ref_type						TEXT,
+			ref_id_primary				TEXT,
+			ref_id_secondary			TEXT,
 			ref_id_tertiary			TEXT,
-			context					TEXT
+			context						TEXT
 		)
 	`).run()
 
-	db_ontology.query('DELETE FROM ExhaustiveExamples').run()
+	db_ontology.query('DELETE FROM Exhaustive_Examples').run()
 	db_ontology.query('UPDATE Concepts SET occurrences = 0').run()
 
 	console.log('done.')
 }
 
 /**
- * 
- * @param {Database} db_sources 
- * @param {Database} db_ontology 
+ * @param {Database} db_sources
+ * @param {Database} db_ontology
  */
 async function find_exhaustive_occurrences(db_sources, db_ontology) {
 	console.log('Fetching all source encoding...')
@@ -79,7 +77,7 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 			.filter(pair => pair.length)
 			.forEach(([entity, context]) => {
 				db_ontology.query(`
-					INSERT INTO ExhaustiveExamples (concept_stem, concept_sense, concept_part_of_speech, ref_type, ref_id_primary, ref_id_secondary, ref_id_tertiary, context)
+					INSERT INTO Exhaustive_Examples (concept_stem, concept_sense, concept_part_of_speech, ref_type, ref_id_primary, ref_id_secondary, ref_id_tertiary, context)
 					VALUES (?,?,?,?,?,?,?,?)
 				`).run(entity.value, entity.sense, entity.label, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context))
 			})
@@ -92,12 +90,11 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 }
 
 /**
- * 
- * @param {Database} db_ontology 
+ * @param {Database} db_ontology
  */
 async function update_occurrences(db_ontology) {
 	console.log('Updating occurrences count for each concept...')
-	
+
 	db_ontology.query(`
 		UPDATE Concepts
 		SET occurrences = Examples.occurrences
@@ -105,7 +102,7 @@ async function update_occurrences(db_ontology) {
 				concept_sense AS sense,
 				concept_part_of_speech AS part_of_speech,
 				COUNT(context) AS occurrences
-			FROM ExhaustiveExamples
+			FROM Exhaustive_Examples
 			GROUP BY concept_stem,
 				concept_sense,
 				concept_part_of_speech
@@ -117,8 +114,7 @@ async function update_occurrences(db_ontology) {
 }
 
 /**
- * 
- * @param {Database} db_ontology 
+ * @param {Database} db_ontology
  */
 function show_examples(db_ontology) {
 	console.log()
@@ -177,14 +173,13 @@ function show_examples(db_ontology) {
 	show_examples({ stem: 'but', sense: 'A', part_of_speech: 'Conjunction' }, { type: 'Bible', id_primary: 'Ruth', id_secondary: '1', id_tertiary: '2' })
 
 	/**
-	 * 
-	 * @param {Concept} concept 
-	 * @param {Reference} reference 
+	 * @param {Concept} concept
+	 * @param {Reference} reference
 	 */
 	function show_examples({ stem, sense, part_of_speech }, { id_primary, id_secondary, id_tertiary }) {
 		const examples = db_ontology.query(`
 			SELECT context
-			FROM ExhaustiveExamples
+			FROM Exhaustive_Examples
 			WHERE concept_stem = ? AND concept_sense = ? AND concept_part_of_speech = ? AND ref_id_primary = ? AND ref_id_secondary = ? AND ref_id_tertiary = ?
 		`).all(stem, sense, part_of_speech, id_primary, id_secondary, id_tertiary)
 
@@ -197,8 +192,7 @@ function show_examples(db_ontology) {
 }
 
 /**
- * 
- * @param {Database} db_ontology 
+ * @param {Database} db_ontology
  */
 function show_top_occurrences(db_ontology) {
 	const top_occurrences = db_ontology.query(`
