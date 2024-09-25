@@ -55,7 +55,6 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 	const all_sources = db_sources.query(`
 		SELECT type, id_primary, id_secondary, id_tertiary, semantic_encoding
 		FROM Sources
-		WHERE id_primary IN ('Ruth', 'Jonah')
 	`).all()
 	console.log(`Fetched ${all_sources.length} verses`)
 
