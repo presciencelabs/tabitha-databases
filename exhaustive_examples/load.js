@@ -36,7 +36,7 @@ function create_or_clear_examples_table(db_ontology) {
 			ref_id_primary				TEXT,
 			ref_id_secondary			TEXT,
 			ref_id_tertiary			TEXT,
-			context						TEXT
+			context_json				TEXT
 		)
 	`).run()
 
@@ -55,6 +55,7 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 	const all_sources = db_sources.query(`
 		SELECT type, id_primary, id_secondary, id_tertiary, semantic_encoding
 		FROM Sources
+		WHERE id_primary IN ('Ruth', 'Jonah')
 	`).all()
 	console.log(`Fetched ${all_sources.length} verses`)
 
@@ -76,7 +77,7 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 			.filter(pair => pair.length)
 			.forEach(([entity, context]) => {
 				db_ontology.query(`
-					INSERT INTO Exhaustive_Examples (concept_stem, concept_sense, concept_part_of_speech, ref_type, ref_id_primary, ref_id_secondary, ref_id_tertiary, context)
+					INSERT INTO Exhaustive_Examples (concept_stem, concept_sense, concept_part_of_speech, ref_type, ref_id_primary, ref_id_secondary, ref_id_tertiary, context_json)
 					VALUES (?,?,?,?,?,?,?,?)
 				`).run(entity.value, entity.sense, entity.label, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context))
 			})
@@ -101,7 +102,7 @@ async function update_occurrences(db_ontology) {
 			SELECT	concept_stem AS stem,
 						concept_sense AS sense,
 						concept_part_of_speech AS part_of_speech,
-						COUNT(context) AS occurrences
+						COUNT(context_json) AS occurrences
 			FROM Exhaustive_Examples
 			GROUP BY stem, sense, part_of_speech
 		) AS Examples
@@ -176,14 +177,14 @@ function show_examples(db_ontology) {
 	 */
 	function show_examples({ stem, sense, part_of_speech }, { id_primary, id_secondary, id_tertiary }) {
 		const examples = db_ontology.query(`
-			SELECT context
+			SELECT context_json
 			FROM Exhaustive_Examples
 			WHERE concept_stem = ? AND concept_sense = ? AND concept_part_of_speech = ? AND ref_id_primary = ? AND ref_id_secondary = ? AND ref_id_tertiary = ?
 		`).all(stem, sense, part_of_speech, id_primary, id_secondary, id_tertiary)
 
 		console.log(`----- ${stem}-${sense} in ${id_primary} ${id_secondary}:${id_tertiary} -----`)
-		for (const { context } of examples) {
-			console.log(context)
+		for (const { context_json } of examples) {
+			console.log(context_json)
 		}
 		console.log()
 	}
