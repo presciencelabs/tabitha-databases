@@ -16,22 +16,20 @@ https://sqlitebrowser.org has been a good tool and it's free
 
 ### Command line
 
-`sqlite3` is needed, thankfully it's already installed on Mac, otherwise:  https://www.sqlite.org/download.html
+`sqlite3` is needed, thankfully for Mac users it's already installed, otherwise:  https://www.sqlite.org/download.html
 
 #### Getting help
+
+##### Interactive
 
 1. `sqlite3`
 1. `sqlite> .help` *https://www.sqlite.org/cli.html#special_commands_to_sqlite3_dot_commands_*
 1. `^d` to exit shell
 
-or
+##### Man page
 
 https://www.sqlite.org/cli.html#command_line_options
 `sqlite3 -help`
-
-or
-
-`sqlite3 example.sqlite .help`
 
 ### Dump
 
@@ -39,7 +37,7 @@ or
 
 ### Diffing to understand changes
 
-Databases can be diffed using sqldiff (https://www.sqlite.org/sqldiff.html), mac users `brew install sqldiff`
+Databases can be diffed using sqldiff (https://www.sqlite.org/sqldiff.html), Mac users `brew install sqldiff`
 
 ## Hosting service
 
@@ -65,13 +63,13 @@ https://developers.cloudflare.com/workers/wrangler
 
 `wrangler d1 execute <DB_NAME> --command="select part_of_speech, count(*) as count from Concepts group by part_of_speech order by count; select * from Version;"`
 
-### Deployment
+## Deployment
 
 Check each databases's approach below.
 
-## Ontology
+### Ontology (⚠️ see Exhaustive examples section below... Ontology must be manually deployed temporarily)
 
-### When a new Ontology is available from TBTA in `mdb` format.
+#### When a new Ontology is available from TBTA in `mdb` format.
 
 1. Convert the `mdb` to a sqlite database
 	> ⚠️ Can't seem to find a commandline tool for this... until something else presents itself, it will need to be done manually.
@@ -79,11 +77,11 @@ Check each databases's approach below.
 	> e.g., `Ontology.VERSION.YYYY-MM-DD.mdb.sqlite`
 1. Run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
 
-## Complex Terms
+### Complex Terms
 
 Complex terms will be updated from the "How to" spreadsheet to the database on a regular schedule.
 
-### Testing locally
+#### Testing locally
 
 From within the `complex_terms` dir:
 
@@ -91,16 +89,16 @@ From within the `complex_terms` dir:
 
  Hit `curl 'http://localhost:8787/__scheduled'` in a separate terminal to run it.
 
-### Deployment
+#### Deployment
 
 > ⚠️ You will need Cloudflare credentials to deploy.
 
 1. Ensure the correct database binding is set in `wrangler.toml`
 1. From within `./complex_terms/` run `wrangler deploy`
 
-## Sources
+### Sources
 
-### When a new Bible, Community Development Text, or Grammar Introduction is available from TBTA in `mdb` format.
+#### When a new Bible, Community Development Text, or Grammar Introduction is available from TBTA in `mdb` format.
 
 1. Convert the `mdbs` to their respective sqlite databases
 	> ⚠️ Can't seem to find a commandline tool for this... until something else presents itself, it will need to be done manually.
@@ -108,11 +106,11 @@ From within the `complex_terms` dir:
 	> e.g., `Bible.YYYY-MM-DD.mdb.sqlite Community_Development_Texts.YYYY-MM-DD.mdb.sqlite Grammar_Introduction.YYYY-MM-DD.mdb.sqlite`
 1. Run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
 
-## Targets
+### Targets
 
-### When any new project is available from TBTA in `mdb` format.
+#### When any new project is available from TBTA in `mdb` format.
 
-1. Ensure the inflections have been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
+1. Ensure the inflections have already been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
 1. Convert the `mdb` to a sqlite database and place in the `tbta_dbs_as_sqlite` directory with appropriate naming convention.
 	> ⚠️ Can't seem to find a commandline tool for this... until something else presents itself, it will need to be done manually.
 
@@ -120,22 +118,45 @@ From within the `complex_terms` dir:
 1. Once the new sqlite db and the inflections are in place, they can be part of the same `commit` and pushed.
 1. Manually run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
 
-### Local migration
+## Local migration
 
-#### Ontology
-To create the Tabitha database from mdb:
+### Ontology
 
-`bun ontology/migrate.js Ontology.VERSION.YYYY-MM-DD.mdb.sqlite Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
+#### Create the TaBiThA database from an `.mdb`
 
-To dump to an sql file that can be executed on the wrangler db:
+`bun ontology/migrate.js Ontology.VERSION.YYYY-MM-DD.mdb.sqlite ontology/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
 
-`sqlite3 Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite .dump > Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite.sql`
+#### Dump to a `.sql` file
 
-#### Sources
-To create the Tabitha database from mdb:
+`sqlite3 ontology/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite .dump > ontology/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite.sql`
 
-`bun sources/migrate.js Bible.YYYY-MM-DD.mdb.sqlite Community_Development_Texts.YYYY-MM-DD.mdb.sqlite Grammar_Introduction.YYYY-MM-DD.mdb.sqlite Sources.YYYY-MM-DD.tabitha.sqlite`
+### Sources
 
-To dump to an sql file that can be executed on the wrangler db:
+#### Create the TaBiThA database from an `.mdb`
 
-`sqlite3 Sources.2024-07-09.tabitha.sqlite .dump > Sources.2024-07-09.tabitha.sqlite.sql`
+`bun sources/migrate.js Bible.YYYY-MM-DD.mdb.sqlite Community_Development_Texts.YYYY-MM-DD.mdb.sqlite Grammar_Introduction.YYYY-MM-DD.mdb.sqlite sources/Sources.YYYY-MM-DD.tabitha.sqlite`
+
+#### Dump to a `.sql` file
+
+`sqlite3 sources/Sources.YYYY-MM-DD.tabitha.sqlite .dump > sources/Sources.YYYY-MM-DD.tabitha.sqlite.sql`
+
+### Targets
+
+#### Create the TaBiThA database from an `.mdb`
+
+> ⚠️ Ensure the inflections have already been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
+
+`bun targets/migrate.js English.YYYY-MM-DD.mdb.sqlite targets/Targets.YYYY-MM-DD.tabitha.sqlite`
+
+#### Dump to a `.sql` file
+
+`sqlite3 targets/Targets.YYYY-MM-DD.tabitha.sqlite .dump > targets/Targets.YYYY-MM-DD.tabitha.sqlite.sql`
+
+
+### Exhaustive examples
+
+This is a data generation and load process that updates the Ontology database.
+
+> ⚠️ Local copies of the **Ontology** and **Sources** *TaBiThA* databases are required for this data generation.
+
+`bun exhaustive_examples/load.js ontology/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite sources/Sources.YYYY-MM-DD.tabitha.sqlite`
