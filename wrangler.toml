@@ -1,0 +1,6 @@
+# https://developers.cloudflare.com/workers/wrangler/configuration
+
+[[d1_databases]]
+binding = "DB_Ontology"
+database_name = "Ontology.9489.2024-10-02"
+database_id = "a150f25d-053f-404d-8229-7750de4893d5"
