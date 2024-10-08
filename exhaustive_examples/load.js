@@ -75,10 +75,11 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 			.map((entity, index, source_entities) => entity.sense ? [entity, find_word_context(index, source_entities)] : [])
 			.filter(pair => pair.length)
 			.forEach(([entity, context]) => {
+				const stem = entity.value.split('/')[0]	// remove a pairing
 				db_ontology.query(`
 					INSERT INTO Exhaustive_Examples (concept_stem, concept_sense, concept_part_of_speech, ref_type, ref_id_primary, ref_id_secondary, ref_id_tertiary, context_json)
 					VALUES (?,?,?,?,?,?,?,?)
-				`).run(entity.value, entity.sense, entity.label, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context))
+				`).run(stem, entity.sense, entity.label, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context))
 			})
 
 		await Bun.write(Bun.stdout, '.')

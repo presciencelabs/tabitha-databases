@@ -110,9 +110,22 @@ function find_adjective_context(entity_index, source_entities) {
 		},
 	])
 	
+	const outer_context = get_outer_context(adjp_index, source_entities, 'Modified')
+
+	// if predicative, also get the agent NP
+	if ('Verb' in outer_context) {
+		const agent_np_index = find_entity_before(
+			entity => is_phrase(entity, 'NP') && has_feature(entity, FEATURES.NP.SEMANTIC_ROLE, 'Agent'),
+			{ skip_clauses: true, break_condition: is_opening_any_clause },
+		)(adjp_index, source_entities)
+		if (agent_np_index !== -1) {
+			outer_context['Agent'] = format_concept(get_head_word(agent_np_index, source_entities))
+		}
+	}
+
 	return {
 		'Degree': get_feature_value(source_entities[entity_index], FEATURES.ADJ.DEGREE),
-		...get_outer_context(adjp_index, source_entities, 'Modified'),
+		...outer_context,
 		...arguments_finder(adjp_index, source_entities),
 	}
 }
@@ -174,7 +187,9 @@ function get_outer_context(phrase_index, source_entities, outer_label) {
 }
 
 function format_concept(entity) {
-	return `${entity.value}-${entity.sense}`
+	// remove the pairing part of the value
+	const stem = entity.value.split('/')[0]
+	return `${stem}-${entity.sense}`
 }
 
 /**
