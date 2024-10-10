@@ -35,7 +35,7 @@ export const FEATURES = {
 				'N': 'No Degree',
 				'C': 'Comparative',
 				'S': 'Superlative',
-				'V': 'Intensified',
+				'I': 'Intensified',
 				'E': 'Extremely Intensified',
 				'T': "'too'",
 				'L': "'less'",
