@@ -48,13 +48,20 @@ export function transform(rows) {
 		const [term, part_of_speech, structure, pairing, explication,] = row.split('\t')
 
 		return {
-			term,
-			part_of_speech,
+			term: term.trim(),
+			part_of_speech: capitalize(part_of_speech.trim()),
 			structure,
 			pairing,
 			explication,
 		}
 	})
+	
+	/**
+	 * @param {string} text 
+	 */
+	function capitalize(text) {
+		return `${text[0].toUpperCase()}${text.slice(1)}`
+	}
 }
 
 /** @param {import('bun:sqlite').Database} tabitha_db */
