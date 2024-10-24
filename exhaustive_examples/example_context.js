@@ -125,6 +125,7 @@ function find_adjective_context(entity_index, source_entities) {
 
 	return {
 		'Degree': get_feature_value(source_entities[entity_index], FEATURES.ADJ.DEGREE),
+		'Usage': get_feature_value(source_entities[adjp_index], FEATURES.ADJP.USAGE),
 		...outer_context,
 		...arguments_finder(adjp_index, source_entities),
 	}
