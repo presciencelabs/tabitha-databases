@@ -87,7 +87,7 @@ From within the `complex_terms` dir:
 
 `wrangler dev --test-scheduled`
 
- Hit `curl 'http://localhost:8787/__scheduled'` in a separate terminal to run it.
+ Hit `curl 'http://localhost.tbta.bible:8787/__scheduled'` in a separate terminal to run it.
 
 #### Deployment
 
