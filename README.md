@@ -4,7 +4,7 @@ https://www.sqlite.org
 
 ## Converting `mdb` to `sqlite`
 
-We are currently using a manual process, i.e., TBTA's `Ontology.mdb` -> Google Drive -> MDB Viewer app -> download sqlite file (`Ontology.VERSION.YYY-MM-DD.mdb.sqlite`)
+We are currently using a manual process, i.e., TBTA's `Ontology.mdb` -> Google Drive -> MDB Viewer app -> download sqlite file (`Ontology.VERSION.YYY-MM-DD.tbta.sqlite`)
 
 > if an mdb is larger than 40M, the MDB Viewer app will not work unfortunately.  There is an option to buy MDB ACCB Viewer (for Macs).
 
@@ -73,9 +73,10 @@ Check each databases's approach below.
 
 1. Convert the `mdb` to a sqlite database
 	> ⚠️ Can't seem to find a commandline tool for this... until something else presents itself, it will need to be done manually.
-1. Once in a sqlite format, it should be committed to the `tbta_dbs_as_sqlite` directory following appropriate naming convention.
-	> e.g., `Ontology.VERSION.YYYY-MM-DD.mdb.sqlite`
+1. Once in a sqlite format, it should be committed to the `databases` directory following appropriate naming convention.
+	> e.g., `Ontology.VERSION.YYYY-MM-DD.tbta.sqlite`
 1. Run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
+1. Update the Cloudflare `DB_Ontology` binding for the `sync_complex_terms` Worker.
 
 ### Complex Terms
 
@@ -102,8 +103,8 @@ From within the `complex_terms` dir:
 
 1. Convert the `mdbs` to their respective sqlite databases
 	> ⚠️ Can't seem to find a commandline tool for this... until something else presents itself, it will need to be done manually.
-1. Once in a sqlite format, it should be committed to the `tbta_dbs_as_sqlite` directory following appropriate naming convention.
-	> e.g., `Bible.YYYY-MM-DD.mdb.sqlite Community_Development_Texts.YYYY-MM-DD.mdb.sqlite Grammar_Introduction.YYYY-MM-DD.mdb.sqlite`
+1. Once in a sqlite format, it should be committed to the `databases` directory following appropriate naming convention.
+	> e.g., `Bible.YYYY-MM-DD.tbta.sqlite Community_Development_Texts.YYYY-MM-DD.tbta.sqlite Grammar_Introduction.YYYY-MM-DD.tbta.sqlite`
 1. Run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
 
 ### Targets
@@ -111,10 +112,10 @@ From within the `complex_terms` dir:
 #### When any new project is available from TBTA in `mdb` format.
 
 1. Ensure the inflections have already been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
-1. Convert the `mdb` to a sqlite database and place in the `tbta_dbs_as_sqlite` directory with appropriate naming convention.
+1. Convert the `mdb` to a sqlite database and place in the `databases` directory with appropriate naming convention.
 	> ⚠️ Can't seem to find a commandline tool for this... until something else presents itself, it will need to be done manually.
 
-	> Example naming convention: `English.YYYY-MM-DD.mdb.sqlite`
+	> Example naming convention: `English.YYYY-MM-DD.tbta.sqlite`
 1. Once the new sqlite db and the inflections are in place, they can be part of the same `commit` and pushed.
 1. Manually run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
 
@@ -124,21 +125,21 @@ From within the `complex_terms` dir:
 
 #### Create the TaBiThA database from an `.mdb`
 
-`bun ontology/migrate.js Ontology.VERSION.YYYY-MM-DD.mdb.sqlite ontology/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
+`bun ontology/migrate.js databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
-`sqlite3 ontology/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite .dump > ontology/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite.sql`
+`sqlite3 databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite.sql`
 
 ### Sources
 
 #### Create the TaBiThA database from an `.mdb`
 
-`bun sources/migrate.js Bible.YYYY-MM-DD.mdb.sqlite Community_Development_Texts.YYYY-MM-DD.mdb.sqlite Grammar_Introduction.YYYY-MM-DD.mdb.sqlite sources/Sources.YYYY-MM-DD.tabitha.sqlite`
+`bun sources/migrate.js databases/Bible.YYYY-MM-DD.tbta.sqlite databases/Community_Development_Texts.YYYY-MM-DD.tbta.sqlite databases/Grammar_Introduction.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
-`sqlite3 sources/Sources.YYYY-MM-DD.tabitha.sqlite .dump > sources/Sources.YYYY-MM-DD.tabitha.sqlite.sql`
+`sqlite3 databases/Sources.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Sources.YYYY-MM-DD.tabitha.sqlite.sql`
 
 ### Targets
 
@@ -146,11 +147,11 @@ From within the `complex_terms` dir:
 
 > ⚠️ Ensure the inflections have already been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
 
-`bun targets/migrate.js English.YYYY-MM-DD.mdb.sqlite targets/Targets.YYYY-MM-DD.tabitha.sqlite`
+`bun targets/migrate.js English.YYYY-MM-DD.tbta.sqlite targets/Targets.YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
-`sqlite3 targets/Targets.YYYY-MM-DD.tabitha.sqlite .dump > targets/Targets.YYYY-MM-DD.tabitha.sqlite.sql`
+`sqlite3 targets/Targets.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > targets/Targets.YYYY-MM-DD.tabitha.sqlite.sql`
 
 
 ### Exhaustive examples
@@ -159,4 +160,4 @@ This is a data generation and load process that updates the Ontology database.
 
 > ⚠️ Local copies of the **Ontology** and **Sources** *TaBiThA* databases are required for this data generation.
 
-`bun exhaustive_examples/load.js ontology/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite sources/Sources.YYYY-MM-DD.tabitha.sqlite`
+`bun exhaustive_examples/load.js databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`

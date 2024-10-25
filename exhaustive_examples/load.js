@@ -1,10 +1,10 @@
+import { Database } from 'bun:sqlite'
 import { find_word_context } from './example_context'
 import { transform_semantic_encoding } from './semantic_encoding'
-import { Database } from 'bun:sqlite'
 
-// usage: `bun exhaustive_examples/load.js Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite Sources.YYYY-MM-DD.tabitha.sqlite`
-const ontology_db_name	 = Bun.argv[2]
-const sources_db_name = Bun.argv[3]
+// usage: `bun exhaustive_examples/load.js databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
+const ontology_db_name	= Bun.argv[2]
+const sources_db_name 	= Bun.argv[3]
 
 const db_ontology = new Database(ontology_db_name)
 const db_sources = new Database(sources_db_name)
