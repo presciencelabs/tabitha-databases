@@ -16,7 +16,6 @@ type WordFormRecord = {
 }
 type PartOfSpeech = 'Adjective' | 'Adverb' | 'Noun' | 'Verb'
 
-//TODO: convert this to a Map instead of using this Object technique.
 type WordFormMap = Record<PartOfSpeech, WordFormRecord[]> & {
 	[key: string]: WordFormRecord[]
 }
