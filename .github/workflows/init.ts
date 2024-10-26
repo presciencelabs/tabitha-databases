@@ -1,4 +1,4 @@
-// usage: `bun .github/workflows/init.js tbta_db_name(s) tabitha_db_name`
+// usage: `bun .github/workflows/init.ts tbta_db_name(s) tabitha_db_name`
 //
 // | tbta_db_name(s)                                                                                                          | tabitha_db_name                            |
 // | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
