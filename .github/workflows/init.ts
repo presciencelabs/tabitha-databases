@@ -1,8 +1,8 @@
 // usage: `bun .github/workflows/init.ts tbta_db_name(s) tabitha_db_name`
 //
-// | tbta_db_name(s)                                                                                                          | tabitha_db_name                            |
-// | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
-// | Ontology.VERSION.YYYY-MM-DD.tbta.sqlite                                                                                   | Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite |
+// | tbta_db_name(s)                                                                                                             | tabitha_db_name                            |
+// | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+// | Ontology.VERSION.YYYY-MM-DD.tbta.sqlite                                                                                     | Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite |
 // | Bible.YYYY-MM-DD.tbta.sqlite Community_Development_Texts.YYYY-MM-DD.tbta.sqlite Grammar_Introduction.YYYY-MM-DD.tbta.sqlite | Sources.YYYY-MM-DD.tabitha.sqlite          |
 //
 
@@ -25,7 +25,7 @@ function check_naming_convention(tbta_db_names, tabitha_db_name) {
 	for (const db_name of [...tbta_db_names, tabitha_db_name]) {
 		// *.YYYY-MM-DD.tbta.sqlite or *.YYYY-MM-DD.tabitha.sqlite
 		// TODO: this could be a little stronger by validating the date
-		const INCLUDES_DATE_AND_EXTENSION = /\.\d{4}-\d{2}-\d{2}\.(mdb|tabitha)\.sqlite$/
+		const INCLUDES_DATE_AND_EXTENSION = /\.\d{4}-\d{2}-\d{2}\.(tbta|tabitha)\.sqlite$/
 
 		if (!INCLUDES_DATE_AND_EXTENSION.test(db_name)) {
 			throw `Database name must contain a date stamp, e.g., Bible.1970-01-01.tbta.sqlite, and end in either .tbta.sqlite or .tabitha.sqlite: ${db_name}`

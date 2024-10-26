@@ -11,8 +11,8 @@ on:
                - sources
                - targets
 
-         tbta_db_name_s:
-            description: 'Name of the TBTA mdb(s) that have been converted to sqlite and are needed for the migration'
+         tbta_db_names:
+            description: 'TBTA database(s) needed for the migration'
             type: string
             required: true
 
@@ -31,7 +31,7 @@ jobs:
             uses: oven-sh/setup-bun@v2
          -
             id: vars
-            run: bun .github/workflows/init.ts ${{ inputs.tbta_db_name_s }} ${{ inputs.tabitha_db_name }} >> $GITHUB_OUTPUT
+            run: bun .github/workflows/init.ts ${{ inputs.tbta_db_names }} ${{ inputs.tabitha_db_name }} >> $GITHUB_OUTPUT
          -
             run: |
                echo "inputs: ${{ toJSON(inputs) }}"
