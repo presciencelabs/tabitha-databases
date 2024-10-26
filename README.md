@@ -125,7 +125,7 @@ From within the `complex_terms` dir:
 
 #### Create the TaBiThA database from an `.mdb`
 
-`bun ontology/migrate.js databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
+`bun ontology/migrate.ts databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
@@ -135,7 +135,7 @@ From within the `complex_terms` dir:
 
 #### Create the TaBiThA database from an `.mdb`
 
-`bun sources/migrate.js databases/Bible.YYYY-MM-DD.tbta.sqlite databases/Community_Development_Texts.YYYY-MM-DD.tbta.sqlite databases/Grammar_Introduction.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
+`bun sources/migrate.ts databases/Bible.YYYY-MM-DD.tbta.sqlite databases/Community_Development_Texts.YYYY-MM-DD.tbta.sqlite databases/Grammar_Introduction.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
@@ -147,7 +147,7 @@ From within the `complex_terms` dir:
 
 > ⚠️ Ensure the inflections have already been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
 
-`bun targets/migrate.js English.YYYY-MM-DD.tbta.sqlite targets/Targets.YYYY-MM-DD.tabitha.sqlite`
+`bun targets/migrate.ts English.YYYY-MM-DD.tbta.sqlite targets/Targets.YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
@@ -160,4 +160,4 @@ This is a data generation and load process that updates the Ontology database.
 
 > ⚠️ Local copies of the **Ontology** and **Sources** *TaBiThA* databases are required for this data generation.
 
-`bun exhaustive_examples/load.js databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
+`bun exhaustive_examples/load.ts databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`

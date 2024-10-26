@@ -1,8 +1,8 @@
-import { Database } from 'bun:sqlite'
+import Database, { type SQLQueryBindings } from 'bun:sqlite'
 import { find_word_context } from './example_context'
 import { transform_semantic_encoding } from './semantic_encoding'
 
-// usage: `bun exhaustive_examples/load.js databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
+// usage: `bun exhaustive_examples/load.ts databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
 const ontology_db_name	= Bun.argv[2]
 const sources_db_name 	= Bun.argv[3]
 
@@ -22,9 +22,7 @@ console.log('done.')
 show_examples(db_ontology)
 show_top_occurrences(db_ontology)
 
-
-/** @param {import('bun:sqlite').Database} db_ontology */
-function create_or_clear_examples_table(db_ontology) {
+function create_or_clear_examples_table(db_ontology: Database) {
 	console.log(`Creating and/or clearing Exhaustive_Examples table in ${db_ontology.filename}...`)
 
 	db_ontology.query(`
@@ -46,13 +44,16 @@ function create_or_clear_examples_table(db_ontology) {
 	console.log('done.')
 }
 
-/**
- * @param {Database} db_sources
- * @param {Database} db_ontology
- */
-async function find_exhaustive_occurrences(db_sources, db_ontology) {
+async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Database) {
 	console.log('Fetching all source encoding...')
-	const all_sources = db_sources.query(`
+	type Source = {
+		type: string
+		id_primary: string
+		id_secondary: string
+		id_tertiary: string
+		semantic_encoding: string
+	}
+	const all_sources = db_sources.query<Source, SQLQueryBindings | SQLQueryBindings[]>(`
 		SELECT type, id_primary, id_secondary, id_tertiary, semantic_encoding
 		FROM Sources
 	`).all()
@@ -64,10 +65,12 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 			console.log()
 			console.log(`Collecting occurrences within ${id_primary}:`)
 		}
+
 		if (id_secondary !== current_reference.id_secondary) {
 			// This is helpful to identify verses where an error occurs
 			await Bun.write(Bun.stdout, id_secondary)
 		}
+
 		current_reference = { id_primary, id_secondary }
 
 		// For each word encountered, add the current verse reference to that word's examples
@@ -89,10 +92,7 @@ async function find_exhaustive_occurrences(db_sources, db_ontology) {
 	console.log('done!')
 }
 
-/**
- * @param {Database} db_ontology
- */
-async function update_occurrences(db_ontology) {
+async function update_occurrences(db_ontology: Database) {
 	console.log('Updating occurrences count for each concept...')
 
 	db_ontology.query(`
@@ -112,10 +112,7 @@ async function update_occurrences(db_ontology) {
 	console.log('done!')
 }
 
-/**
- * @param {Database} db_ontology
- */
-function show_examples(db_ontology) {
+function show_examples(db_ontology: Database) {
 	console.log()
 	console.log('======= Noun Examples =======')
 	// destination role; outer noun & adposition; destination role & adposition
@@ -171,12 +168,11 @@ function show_examples(db_ontology) {
 	// no argument (within Clause)
 	show_examples({ stem: 'but', sense: 'A', part_of_speech: 'Conjunction' }, { type: 'Bible', id_primary: 'Ruth', id_secondary: '1', id_tertiary: '2' })
 
-	/**
-	 * @param {Concept} concept
-	 * @param {Reference} reference
-	 */
-	function show_examples({ stem, sense, part_of_speech }, { id_primary, id_secondary, id_tertiary }) {
-		const examples = db_ontology.query(`
+	function show_examples({ stem, sense, part_of_speech }: Concept, { id_primary, id_secondary, id_tertiary }: Reference) {
+		type ExampleContext = {
+			context_json: string
+		}
+		const examples = db_ontology.query<ExampleContext, SQLQueryBindings | SQLQueryBindings[]>(`
 			SELECT context_json
 			FROM Exhaustive_Examples
 			WHERE concept_stem = ? AND concept_sense = ? AND concept_part_of_speech = ? AND ref_id_primary = ? AND ref_id_secondary = ? AND ref_id_tertiary = ?
@@ -190,11 +186,14 @@ function show_examples(db_ontology) {
 	}
 }
 
-/**
- * @param {Database} db_ontology
- */
-function show_top_occurrences(db_ontology) {
-	const top_occurrences = db_ontology.query(`
+function show_top_occurrences(db_ontology: Database) {
+	type OccurrenceData = {
+		stem: string
+		sense: string
+		part_of_speech: string
+		occurrences: number
+	}
+	const top_occurrences = db_ontology.query<OccurrenceData, SQLQueryBindings | SQLQueryBindings[]>(`
 		SELECT stem, sense, part_of_speech, occurrences
 		FROM Concepts
 		ORDER BY occurrences + 0 DESC

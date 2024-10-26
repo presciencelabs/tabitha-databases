@@ -1,4 +1,6 @@
-export function migrate_lexical_features_table(tbta_db, project, targets_db) {
+import Database, { type SQLQueryBindings } from 'bun:sqlite'
+
+export function migrate_lexical_features_table(tbta_db: Database, project: string, targets_db: Database) {
 	const transformed_data = transform_tbta_data(tbta_db)
 
 	create_tabitha_table(targets_db)
@@ -6,37 +8,28 @@ export function migrate_lexical_features_table(tbta_db, project, targets_db) {
 	load_data(targets_db, project, transformed_data)
 }
 
-/**
- * @typedef {{
- * 	part_of_speech: string
- * 	feature: string
- * 	position: number
- * 	code: string
- * 	value: string
- * 	notes: string
- * }} TransformedData
- *
- * @param {import('bun:sqlite').Database} tbta_db
- * @returns {TransformedData[]}
- */
-function transform_tbta_data(tbta_db) {
+type TransformedData = {
+	part_of_speech: string
+	feature: string
+	position: number
+	code: string
+	value: string
+	notes: string
+}
+function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	const extracted_data = extract()
 
 	const transformed_data = transform()
 
 	return transformed_data
 
-	/**
-	* @typedef {{
-	* 	part_of_speech: string
-	* 	feature: string
-	* 	encoded_values: string
-	* 	notes: string
-	* }} DbRow
-	*
-	* @returns {DbRow[]}
-	*/
-	function extract() {
+	type DbRow = {
+		part_of_speech: string
+		feature: string
+		encoded_values: string
+		notes: string
+	}
+	function extract(): DbRow[] {
 		console.log(`Extracting features from ${tbta_db.filename}...`)
 
 		const sql = `
@@ -51,8 +44,7 @@ function transform_tbta_data(tbta_db) {
 
 		  ORDER BY SyntacticCategory
 	  `
-
-		const results = tbta_db.prepare(sql).all().map(row => ({
+		const results = tbta_db.prepare<DbRow, SQLQueryBindings | SQLQueryBindings[]>(sql).all().map(row => ({
 			...row,
 			notes: row.notes.trim(), // sometimes notes start with non-printable characters or whitespace
 		}))
@@ -88,20 +80,19 @@ function transform_tbta_data(tbta_db) {
 	* | Noun				| Count/Mass					| 4			| C		| Countable									|
 	* | Noun				| Count/Mass					| 4			| M		| Mass										|
 	* | ...
-	*
-	* @returns {TransformedData[]}
 	*/
-	function transform() {
+	function transform(): TransformedData[] {
 		console.log(`Transforming data from ${tbta_db.filename}...`)
 
-		const transformed_data = []
+		const transformed_data: TransformedData[] = []
 
-		/** @type {Map<string, Set<string>>} [part_of_speech, features] */
-		const position_tracker = new Map()
+		type PartOfSpeech = string
+		type Features = Set<string>
+		const position_tracker: Map<PartOfSpeech, Features> = new Map()
 		for (const { part_of_speech, feature, encoded_values, notes } of extracted_data) {
 			const features = position_tracker.get(part_of_speech) ?? new Set()
 			position_tracker.set(part_of_speech, features.add(feature))
-			const position = position_tracker.get(part_of_speech).size
+			const position = position_tracker.get(part_of_speech)?.size ?? 0
 
 			for (const encoded_value of encoded_values.split('|').filter(entry => entry !== '')) {
 				const [value, code] = encoded_value.split('/')
@@ -116,8 +107,7 @@ function transform_tbta_data(tbta_db) {
 	}
 }
 
-/** @param {import('bun:sqlite').Database} targets_db */
-function create_tabitha_table(targets_db) {
+function create_tabitha_table(targets_db: Database) {
 	console.log(`Creating Lexical_Features table in ${targets_db.filename}...`)
 
 	targets_db.query(`
@@ -137,12 +127,7 @@ function create_tabitha_table(targets_db) {
 	return targets_db
 }
 
-/**
- * @param {import('bun:sqlite').Database} targets_db
- * @param {string} project
- * @param {TransformedData[]} transformed_data
- */
-function load_data(targets_db, project, transformed_data) {
+function load_data(targets_db: Database, project: string, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Lexical_Features table...`)
 
 	transformed_data.map(async ({part_of_speech, feature, position, code, value, notes}) => {
@@ -156,4 +141,3 @@ function load_data(targets_db, project, transformed_data) {
 
 	console.log('done.')
 }
-

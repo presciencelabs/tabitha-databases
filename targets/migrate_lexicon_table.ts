@@ -1,4 +1,6 @@
-export function migrate_lexicon_table(tbta_db, project, targets_db) {
+import Database, { type SQLQueryBindings } from 'bun:sqlite'
+
+export function migrate_lexicon_table(tbta_db: Database, project: string, targets_db: Database) {
 	const transformed_data = transform_tbta_data(tbta_db, project)
 
 	create_tabitha_table(targets_db)
@@ -6,8 +8,17 @@ export function migrate_lexicon_table(tbta_db, project, targets_db) {
 	load_data(targets_db, transformed_data)
 }
 
-/** @param {import('bun:sqlite').Database} tbta_db */
-function transform_tbta_data(tbta_db, project) {
+type TransformedData = {
+	id: number
+	project: string
+	stem: string
+	part_of_speech: string
+	gloss: string
+	features: string
+	constituents: string
+}
+
+function transform_tbta_data(tbta_db: Database, project: string): TransformedData[] {
 	const table_names = [
 		'Adjectives',
 		'Adpositions',
@@ -22,7 +33,7 @@ function transform_tbta_data(tbta_db, project) {
 
 	return transformed_data
 
-	function transform_data(table_names) {
+	function transform_data(table_names: string[]) {
 		console.log(`Transforming part of speech data from ${tbta_db.filename}...`)
 
 		const transformed_data = table_names.map(table_name => {
@@ -39,7 +50,7 @@ function transform_tbta_data(tbta_db, project) {
 				FROM ${table_name}
 				ORDER BY ID
 			`
-			return tbta_db.query(sql).all()
+			return tbta_db.query<TransformedData, SQLQueryBindings | SQLQueryBindings[]>(sql).all()
 		}).flat() // flattens data from each parts of speech table into a single array
 
 		console.log('done.')
@@ -48,8 +59,7 @@ function transform_tbta_data(tbta_db, project) {
 	}
 }
 
-/** @param {import('bun:sqlite').Database} targets_db */
-function create_tabitha_table(targets_db) {
+function create_tabitha_table(targets_db: Database) {
 	console.log(`Creating Lexicon table in ${targets_db.filename}...`)
 
 	targets_db.query(`
@@ -70,8 +80,7 @@ function create_tabitha_table(targets_db) {
 	return targets_db
 }
 
-/** @param {import('bun:sqlite').Database} targets_db */
-function load_data(targets_db, transformed_data) {
+function load_data(targets_db: Database, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Lexicon table...`)
 
 	transformed_data.map(async ({id, project, stem, part_of_speech, gloss, features, constituents}) => {

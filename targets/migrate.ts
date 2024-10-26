@@ -1,15 +1,15 @@
 import { $ } from 'bun'
-import { Database } from 'bun:sqlite'
+import Database from 'bun:sqlite'
 import { migrate_form_names_table } from './migrate_form_names_table'
 import { migrate_lexical_features_table } from './migrate_lexical_features_table'
 import { migrate_lexical_forms } from './migrate_lexical_forms'
 import { migrate_lexicon_table } from './migrate_lexicon_table'
 import { migrate_text_table } from './migrate_text_table'
 
-// usage: `bun targets/migrate.js databases/English.YYYY-MM-DD.tbta.sqlite databases/Targets.YYYY-MM-DD.tabitha.sqlite`
-const tbta_db_name 		= Bun.argv[2] 									// databases/English.YYYY-MM-DD.tbta.sqlite
-const project 				= tbta_db_name.match(/\/([^.]+)/)[1] 	// English
-const targets_db_name	= Bun.argv[3] 									// databases/Targets.YYYY-MM-DD.tabitha.sqlite
+// usage: `bun targets/migrate.ts databases/English.YYYY-MM-DD.tbta.sqlite databases/Targets.YYYY-MM-DD.tabitha.sqlite`
+const tbta_db_name 		= Bun.argv[2] 											// databases/English.YYYY-MM-DD.tbta.sqlite
+const project 				= tbta_db_name.match(/\/([^.]+)/)?.[1] ?? ''	// English
+const targets_db_name	= Bun.argv[3] 											// databases/Targets.YYYY-MM-DD.tabitha.sqlite
 
 const tbta_db = new Database(tbta_db_name)
 const targets_db 	= new Database(targets_db_name)

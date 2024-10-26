@@ -1,5 +1,4 @@
 
-/** @type {{ [string]: { [string]: Feature } }} */
 export const FEATURES = {
 	NP: {
 		SEMANTIC_ROLE: {
@@ -96,7 +95,7 @@ export const FEATURES = {
 	},
 }
 
-const ENTITY_LABELS = new Map([
+const ENTITY_LABEL_LOOKUP = new Map([
 	['c', 'Clause'],
 	['n', 'NP'],
 	['N', 'Noun'],
@@ -116,7 +115,6 @@ const ENTITY_LABELS = new Map([
 const WORD_ENTITY_TYPES = new Set(['N', 'V', 'A', 'a', 'P', 'C', 'r', 'p'])
 
 /**
- *
  * The phase_2_encoding looks something like:
  * ~\wd ~\tg c-IDp00NNNNNNNNNNNNN.............~\lu {~\wd ~\tg C-1A.....~\lu then~\wd ~\tg n-SAN.N........~\lu (...
  *
@@ -134,26 +132,19 @@ const WORD_ENTITY_TYPES = new Set(['N', 'V', 'A', 'a', 'P', 'C', 'r', 'p'])
  * ~\wd ~\tg C-1A.....~\lu then => { type: 'C', label: 'Conjunction', features: '1A.....', value: 'then' }
  * ~\wd ~\tg ~\lu )             => { type: '', label: '', features: '', value: ')' }
  * ~\wd ~\tg .-~\lu .           => { type: '.', label: 'period', features: '', value: '.' }
- *
- * @param {string} semantic_encoding
- *
- * @returns {SourceEntity[]}
  */
-export function transform_semantic_encoding(semantic_encoding) {
-	let entities = [...semantic_encoding.matchAll(/~\\wd ~\\tg (?:([\w.])-([^~]*))?~\\lu ([^~]+)/g)]
+export function transform_semantic_encoding(semantic_encoding: string): SourceEntity[] {
+	const EXTRACT_TYPE_FEATURES_VALUES = /~\\wd ~\\tg (?:([\w.])-([^~]*))?~\\lu ([^~]+)/g
+	const entities = [...semantic_encoding.matchAll(EXTRACT_TYPE_FEATURES_VALUES)]
 
 	return entities.map(decode_entity)
 
-	/**
-	 * @param {RegExpMatchArray} entity_match ['~\wd ~\tg N-1A1SDAnK3NN........~\lu God', 'N', '1A1SDAnK3NN........', 'God']
-	 *
-	 * @returns {SourceEntity}
-	 */
-	function decode_entity(entity_match) {
+	// ['~\wd ~\tg N-1A1SDAnK3NN........~\lu God', 'N', '1A1SDAnK3NN........', 'God']
+	function decode_entity(entity_match: RegExpMatchArray): SourceEntity {
+		const type = entity_match[1] ?? ''
 		const features = entity_match[2] ?? ''
 		const value = entity_match[3]
-		const type = entity_match[1] ?? ''
-		const label = ENTITY_LABELS.get(type) || ''
+		const label = ENTITY_LABEL_LOOKUP.get(type) || ''
 		const sense = WORD_ENTITY_TYPES.has(type) ? features[1] : ''
 
 		return {

@@ -1,4 +1,6 @@
-export function migrate_form_names_table(tbta_db, project, targets_db) {
+import Database, { type SQLQueryBindings } from 'bun:sqlite'
+
+export function migrate_form_names_table(tbta_db: Database, project: string, targets_db: Database) {
 	const transformed_data = transform_tbta_data(tbta_db)
 
 	create_tabitha_table(targets_db)
@@ -6,33 +8,24 @@ export function migrate_form_names_table(tbta_db, project, targets_db) {
 	load_data(targets_db, project, transformed_data)
 }
 
-/**
- * @typedef {{
-* 	part_of_speech: string
-* 	name: string
-* 	position: number
-* }} TransformedData
-*
-* @param {import('bun:sqlite').Database} tbta_db
-* @returns {TransformedData[]}
-*/
-function transform_tbta_data(tbta_db) {
+type TransformedData = {
+	part_of_speech: string
+	name: string
+	position: number
+}
+function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	const extracted_data = extract()
 
 	const transformed_data = transform()
 
 	return transformed_data
 
-	/**
-	* @typedef {{
-	* 	part_of_speech: string
-	* 	name: string
-	* 	FieldName: string
-	* }} DbRow
-	*
-	* @returns {DbRow[]}
-	*/
-	function extract() {
+	type DbRow = {
+		part_of_speech: string
+		name: string
+		FieldName: string
+	}
+	function extract(): DbRow[] {
 		console.log(`Extracting form names from ${tbta_db.filename}...`)
 
 		const sql = `
@@ -46,22 +39,20 @@ function transform_tbta_data(tbta_db) {
 
 		  ORDER BY SyntacticCategory
 	  `
-
-		const results = tbta_db.prepare(sql).all()
+		const results = tbta_db.prepare<DbRow, SQLQueryBindings | SQLQueryBindings[]>(sql).all()
 
 		console.log('done.')
 
 		return results
 	}
 
-	/** @returns {TransformedData[]} */
-	function transform() {
+	function transform(): TransformedData[] {
 		console.log(`Transforming data from ${tbta_db.filename}...`)
 
 		const transformed_data = extracted_data.map(({part_of_speech, name, FieldName}) => ({
 			part_of_speech,
 			name,
-			position: FieldName.match(/(\d+)/)[1], // FieldName pattern:  "Form Name 1", "Form Name 2", etc.
+			position: Number(FieldName.match(/(\d+)/)?.[1] ?? 0), // FieldName pattern:  "Form Name 1", "Form Name 2", etc.
 		}))
 
 		console.log('done.')
@@ -70,7 +61,7 @@ function transform_tbta_data(tbta_db) {
 	}
 }
 
-function create_tabitha_table(targets_db) {
+function create_tabitha_table(targets_db: Database) {
 	console.log(`Creating Form_Names table in ${targets_db.filename}...`)
 
 	targets_db.query(`
@@ -87,12 +78,7 @@ function create_tabitha_table(targets_db) {
 	return targets_db
 }
 
-/**
- * @param {import('bun:sqlite').Database} targets_db
- * @param {string} project
- * @param {TransformedData[]} transformed_data
- */
-function load_data(targets_db, project, transformed_data) {
+function load_data(targets_db: Database, project: string, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Form_Names table...`)
 
 	transformed_data.map(async ({part_of_speech, name, position}) => {

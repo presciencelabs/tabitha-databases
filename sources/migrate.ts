@@ -1,6 +1,6 @@
-import { Database } from 'bun:sqlite'
+import Database, { type SQLQueryBindings } from 'bun:sqlite'
 
-// usage: `bun sources/migrate.js databases/Bible.YYYY-MM-DD.tbta.sqlite databases/Community_Development_Texts.YYYY-MM-DD.tbta.sqlite databases/Grammar_Introduction.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
+// usage: `bun sources/migrate.ts databases/Bible.YYYY-MM-DD.tbta.sqlite databases/Community_Development_Texts.YYYY-MM-DD.tbta.sqlite databases/Grammar_Introduction.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
 const tbta_sources_from_input = Bun.argv.slice(2, -1) // individual database names representing all of the sources
 const tabitha_db_name 			= Bun.argv.at(-1) 		// the final database, i.e., last argument
 
@@ -29,18 +29,25 @@ console.log('done.')
 tbta_sources_from_input.map(tbta_source_from_input => {
 	console.log(`Extracting relevant table names from ${tbta_source_from_input}...`)
 	const tbta_db = new Database(tbta_source_from_input) // databases/Bible.YYYY-MM-DD.tbta.sqlite
-	const tbta_source_name = tbta_source_from_input.match(/\/([^.]+)/)[1] // Bible
+	const tbta_source_name = tbta_source_from_input.match(/\/([^.]+)/)?.[1] // Bible
 
 	// https://bun.sh/docs/api/sqlite#reference
-	const tbta_source_tablenames = tbta_db.query(`
-		SELECT *
+	const tbta_source_tablenames = tbta_db.query<{ name: string }, SQLQueryBindings | SQLQueryBindings[]>(`
+		SELECT name
 		FROM sqlite_master
 		WHERE type = 'table'
 			AND name != 'Version'
 	`).all().map(({name}) => name)
 
 	tbta_source_tablenames.map(tbta_table_name => {
-		const tbta_data_rows_per_table = tbta_db.query(`
+		type SourceRow = {
+			Source: string
+			Reference: string
+			Verse: string
+			AnalyzedVerse: string
+			Notes: string
+		}
+		const tbta_data_rows_per_table = tbta_db.query<SourceRow, SQLQueryBindings | SQLQueryBindings[]>(`
 			SELECT '${tbta_source_name}' AS Source, Reference, Verse, AnalyzedVerse, Notes
 			FROM '${tbta_table_name}'
 		`).all()
