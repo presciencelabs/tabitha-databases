@@ -24,7 +24,6 @@ try {
 function check_naming_convention(tbta_db_names, tabitha_db_name) {
 	for (const db_name of [...tbta_db_names, tabitha_db_name]) {
 		// *.YYYY-MM-DD.tbta.sqlite or *.YYYY-MM-DD.tabitha.sqlite
-		// TODO: this could be a little stronger by validating the date
 		const INCLUDES_DATE_AND_EXTENSION = /\.\d{4}-\d{2}-\d{2}\.(tbta|tabitha)\.sqlite$/
 
 		if (!INCLUDES_DATE_AND_EXTENSION.test(db_name)) {
