@@ -11,8 +11,8 @@ on:
                - sources
                - targets
 
-         tbta_db_name_s:
-            description: 'Name of the TBTA mdb(s) that have been converted to sqlite and are needed for the migration'
+         tbta_db_names:
+            description: 'TBTA database(s) needed for the migration'
             type: string
             required: true
 
@@ -31,7 +31,7 @@ jobs:
             uses: oven-sh/setup-bun@v2
          -
             id: vars
-            run: bun .github/workflows/init.js ${{ inputs.tbta_db_name_s }} ${{ inputs.tabitha_db_name }} >> $GITHUB_OUTPUT
+            run: bun .github/workflows/init.ts ${{ inputs.tbta_db_names }} ${{ inputs.tabitha_db_name }} >> $GITHUB_OUTPUT
          -
             run: |
                echo "inputs: ${{ toJSON(inputs) }}"
@@ -55,7 +55,7 @@ jobs:
             uses: oven-sh/setup-bun@v2
          -
             name: migrate TBTA data to TaBiThA
-            run: bun ${{ inputs.db_folder }}/migrate.js ${{ inputs.tbta_db_name_s }} ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}
+            run: bun ${{ inputs.db_folder }}/migrate.ts ${{ inputs.tbta_db_names }} ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}
          -
             name: Dump tables
             # grep -v is because of https://developers.cloudflare.com/d1/build-with-d1/import-export-data/#convert-sqlite-database-files
