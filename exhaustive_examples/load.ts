@@ -2,25 +2,14 @@ import Database, { type SQLQueryBindings } from 'bun:sqlite'
 import { find_word_context } from './example_context'
 import { transform_semantic_encoding } from './semantic_encoding'
 
-// usage: `bun exhaustive_examples/load.ts databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
-const ontology_db_name	= Bun.argv[2]
-const sources_db_name 	= Bun.argv[3]
+export async function load_examples(db_ontology: Database, db_sources: Database) {
+	create_or_clear_examples_table(db_ontology)
+	await find_exhaustive_occurrences(db_sources, db_ontology)
+	update_occurrences(db_ontology)
 
-const db_ontology = new Database(ontology_db_name)
-const db_sources = new Database(sources_db_name)
-
-db_ontology.exec('PRAGMA journal_mode = WAL')
-
-create_or_clear_examples_table(db_ontology)
-await find_exhaustive_occurrences(db_sources, db_ontology)
-update_occurrences(db_ontology)
-
-console.log('Optimizing Ontology db...')
-db_ontology.query('VACUUM').run()
-console.log('done.')
-
-show_examples(db_ontology)
-show_top_occurrences(db_ontology)
+	show_examples(db_ontology)
+	show_top_occurrences(db_ontology)
+}
 
 function create_or_clear_examples_table(db_ontology: Database) {
 	console.log(`Creating and/or clearing Exhaustive_Examples table in ${db_ontology.filename}...`)
