@@ -55,7 +55,7 @@ jobs:
             uses: oven-sh/setup-bun@v2
          -
             name: migrate TBTA data to TaBiThA
-            run: bun ${{ inputs.db_folder }}/migrate.ts ${{ inputs.tbta_db_name_s }} ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}
+            run: bun ${{ inputs.db_folder }}/migrate.ts ${{ inputs.tbta_db_names }} ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}
          -
             name: Dump tables
             # grep -v is because of https://developers.cloudflare.com/d1/build-with-d1/import-export-data/#convert-sqlite-database-files
