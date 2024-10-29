@@ -1,5 +1,5 @@
 import Database from 'bun:sqlite'
-import { load_examples } from '../exhaustive_examples/load'
+import { load_examples } from './exhaustive_examples/load'
 import { migrate_complex_terms_table } from './migrate_complex_terms_table'
 import { migrate_concepts_table } from './migrate_concepts_table'
 import { migrate_senses } from './migrate_senses'
