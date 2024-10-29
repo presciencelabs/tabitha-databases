@@ -107,8 +107,7 @@ jobs:
             with:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#execute
-               # note: --remote is default in the CI apparently.
-               command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --file=${{ needs.init.outputs.TABITHA_DB_DUMP }}
+               command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --remote --file=${{ needs.init.outputs.TABITHA_DB_DUMP }}
          -
             name: Smoke test
             uses: cloudflare/wrangler-action@v3.11.0
