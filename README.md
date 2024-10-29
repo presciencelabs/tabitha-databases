@@ -67,7 +67,7 @@ https://developers.cloudflare.com/workers/wrangler
 
 Check each databases's approach below.
 
-### Ontology (⚠️ see Exhaustive examples section below... Ontology must be manually deployed temporarily)
+### Ontology
 
 #### When a new Ontology is available from TBTA in `mdb` format.
 
@@ -125,7 +125,7 @@ From within the `complex_terms` dir:
 
 #### Create the TaBiThA database from an `.mdb`
 
-`bun ontology/migrate.ts databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
+`bun ontology/migrate.ts databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
@@ -147,17 +147,8 @@ From within the `complex_terms` dir:
 
 > ⚠️ Ensure the inflections have already been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
 
-`bun targets/migrate.ts English.YYYY-MM-DD.tbta.sqlite targets/Targets.YYYY-MM-DD.tabitha.sqlite`
+`bun targets/migrate.ts databases/English.YYYY-MM-DD.tbta.sqlite databases/Targets.YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
-`sqlite3 targets/Targets.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > targets/Targets.YYYY-MM-DD.tabitha.sqlite.sql`
-
-
-### Exhaustive examples
-
-This is a data generation and load process that updates the Ontology database.
-
-> ⚠️ Local copies of the **Ontology** and **Sources** *TaBiThA* databases are required for this data generation.
-
-`bun exhaustive_examples/load.ts databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
+`sqlite3 databases/Targets.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Targets.YYYY-MM-DD.tabitha.sqlite.sql`

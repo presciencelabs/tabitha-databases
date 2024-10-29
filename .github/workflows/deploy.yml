@@ -11,8 +11,8 @@ on:
                - sources
                - targets
 
-         tbta_db_names:
-            description: 'TBTA database(s) needed for the migration'
+         input_db_names:
+            description: 'TBTA/TaBiThA database(s) needed for the migration'
             type: string
             required: true
 
@@ -31,7 +31,7 @@ jobs:
             uses: oven-sh/setup-bun@v2
          -
             id: vars
-            run: bun .github/workflows/init.ts ${{ inputs.tbta_db_names }} ${{ inputs.tabitha_db_name }} >> $GITHUB_OUTPUT
+            run: bun .github/workflows/init.ts ${{ inputs.input_db_names }} ${{ inputs.tabitha_db_name }} >> $GITHUB_OUTPUT
          -
             run: |
                echo "inputs: ${{ toJSON(inputs) }}"
@@ -40,8 +40,8 @@ jobs:
                echo "secrets: ${{ toJSON(secrets) }}"
 
       outputs:
-         TABITHA_DB_NAME: ${{ steps.vars.outputs.TABITHA_DB_NAME }}
-         TABITHA_DB_DUMP: ${{ steps.vars.outputs.TABITHA_DB_DUMP }}
+         TABITHA_DB_NAME: ${{ steps.vars.outputs.OUTPUT_DB_NAME }}
+         TABITHA_DB_DUMP: ${{ steps.vars.outputs.OUTPUT_DB_DUMP }}
          DEPLOY_DB_NAME: ${{ steps.vars.outputs.DEPLOY_DB_NAME }}
 
    migrate:
@@ -55,20 +55,20 @@ jobs:
             uses: oven-sh/setup-bun@v2
          -
             name: migrate TBTA data to TaBiThA
-            run: bun ${{ inputs.db_folder }}/migrate.ts ${{ inputs.tbta_db_names }} ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}
+            run: bun ${{ inputs.db_folder }}/migrate.ts ${{ inputs.input_db_names }} ${{ needs.init.outputs.TABITHA_DB_NAME }}
          -
             name: Dump tables
             # grep -v is because of https://developers.cloudflare.com/d1/build-with-d1/import-export-data/#convert-sqlite-database-files
-            run: sqlite3 ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_DUMP }}
+            run: sqlite3 ${{ needs.init.outputs.TABITHA_DB_NAME }} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${{ needs.init.outputs.TABITHA_DB_DUMP }}
          -
             name: Created files
-            run: ls -ltr ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_NAME }}*
+            run: ls -ltr ${{ needs.init.outputs.TABITHA_DB_NAME }}*
          -
             name: Store dump
             uses: actions/upload-artifact@v4
             with:
                name: tabitha-dump
-               path: ${{ inputs.db_folder }}/${{ needs.init.outputs.TABITHA_DB_DUMP }}
+               path: ${{ needs.init.outputs.TABITHA_DB_DUMP }}
 
    deploy:
       needs: [init, migrate]
@@ -86,7 +86,7 @@ jobs:
          -
             name: Get current databases
             id: db_list
-            uses: cloudflare/wrangler-action@v3
+            uses: cloudflare/wrangler-action@v3.11.0
             with:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#list
@@ -96,24 +96,23 @@ jobs:
             run: echo '${{ steps.db_list.outputs.command-output }}' | jq '.[].name' | sort
          -
             name: Create new database
-            uses: cloudflare/wrangler-action@v3
+            uses: cloudflare/wrangler-action@v3.11.0
             with:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#create
                command: d1 create ${{ needs.init.outputs.DEPLOY_DB_NAME }}
          -
             name: Load data
-            uses: cloudflare/wrangler-action@v3
+            uses: cloudflare/wrangler-action@v3.11.0
             with:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#execute
-               # note: --remote is default in the CI apparently.
-               command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --file=${{ needs.init.outputs.TABITHA_DB_DUMP }}
+               command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --remote --file=${{ needs.init.outputs.TABITHA_DB_DUMP }}
          -
             name: Smoke test
-            uses: cloudflare/wrangler-action@v3
+            uses: cloudflare/wrangler-action@v3.11.0
             with:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#execute
                # note: --remote is default in the CI apparently.
-               command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --command="select name from sqlite_master"
+               command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --remote --command="select name from sqlite_master"
