@@ -86,7 +86,7 @@ jobs:
          -
             name: Get current databases
             id: db_list
-            uses: cloudflare/wrangler-action@v3
+            uses: cloudflare/wrangler-action@v3.11.0
             with:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#list
@@ -96,14 +96,14 @@ jobs:
             run: echo '${{ steps.db_list.outputs.command-output }}' | jq '.[].name' | sort
          -
             name: Create new database
-            uses: cloudflare/wrangler-action@v3
+            uses: cloudflare/wrangler-action@v3.11.0
             with:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#create
                command: d1 create ${{ needs.init.outputs.DEPLOY_DB_NAME }}
          -
             name: Load data
-            uses: cloudflare/wrangler-action@v3
+            uses: cloudflare/wrangler-action@v3.11.0
             with:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#execute
@@ -111,7 +111,7 @@ jobs:
                command: d1 execute ${{ needs.init.outputs.DEPLOY_DB_NAME }} --file=${{ needs.init.outputs.TABITHA_DB_DUMP }}
          -
             name: Smoke test
-            uses: cloudflare/wrangler-action@v3
+            uses: cloudflare/wrangler-action@v3.11.0
             with:
                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
                # https://developers.cloudflare.com/workers/wrangler/commands/#execute
