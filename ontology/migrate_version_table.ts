@@ -1,46 +1,51 @@
-export function migrate_version_table(tbta_db, tabitha_db) {
-	const transformed_data = transform_tbta_data(tbta_db)
+import Database from 'bun:sqlite'
+
+type VersionNumber = string
+
+export function migrate_version_table(tbta_db: Database, tabitha_db: Database) {
+	const transformed_data: VersionNumber = transform_tbta_data(tbta_db)
 
 	create_tabitha_table(tabitha_db)
 
 	load_data(tabitha_db, transformed_data)
 }
 
-/** @param {import('bun:sqlite').Database} tbta_db */
-function transform_tbta_data(tbta_db) {
+function transform_tbta_data(tbta_db: Database): VersionNumber {
 	console.log(`Transforming data from ${tbta_db.filename}...`)
 
-	const {version} = tbta_db.query(`
+	type DbRow = {
+		version: string
+	}
+
+	const { version } = tbta_db.query<DbRow, []>(`
 		SELECT Version AS version
 		FROM OntologyVersion
-	`).get()
+	`).get() ?? { version: '' }
 
 	console.log('done.')
 
 	return version
 }
 
-/** @param {import('bun:sqlite').Database} tabitha_db */
-function create_tabitha_table(tabitha_db) {
+function create_tabitha_table(tabitha_db: Database) {
 	console.log(`Creating Version table in ${tabitha_db.filename}...`)
 
-	tabitha_db.query(`
+	tabitha_db.run(`
 		CREATE TABLE IF NOT EXISTS Version (
 			version TEXT
 		)
-	`).run()
+	`)
 
 	console.log('done.')
 }
 
-/** @param {import('bun:sqlite').Database} tabitha_db */
-function load_data(tabitha_db, transformed_data) {
+function load_data(tabitha_db: Database, transformed_data: VersionNumber) {
 	console.log(`Loading data into Version table...`)
 
-	tabitha_db.query(`
+	tabitha_db.run(`
 		INSERT INTO Version (version)
 		VALUES (?)
-	`).run(transformed_data)
+	`, [transformed_data])
 
 	console.log('done.')
 }

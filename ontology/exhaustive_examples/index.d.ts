@@ -6,12 +6,6 @@ type SourceEntity = {
 	sense: string
 }
 
-type Concept = {
-	stem: string
-	sense: string
-	part_of_speech: string
-}
-
 type Reference = {
 	type: string
 	id_primary: string
