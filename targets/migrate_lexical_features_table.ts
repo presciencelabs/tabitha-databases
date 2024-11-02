@@ -1,4 +1,4 @@
-import Database, { type SQLQueryBindings } from 'bun:sqlite'
+import Database from 'bun:sqlite'
 
 export function migrate_lexical_features_table(tbta_db: Database, project: string, targets_db: Database) {
 	const transformed_data = transform_tbta_data(tbta_db)
@@ -44,7 +44,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 
 		  ORDER BY SyntacticCategory
 	  `
-		const results = tbta_db.prepare<DbRow, SQLQueryBindings | SQLQueryBindings[]>(sql).all().map(row => ({
+		const results = tbta_db.prepare<DbRow, []>(sql).all().map(row => ({
 			...row,
 			notes: row.notes.trim(), // sometimes notes start with non-printable characters or whitespace
 		}))
@@ -110,7 +110,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 function create_tabitha_table(targets_db: Database) {
 	console.log(`Creating Lexical_Features table in ${targets_db.filename}...`)
 
-	targets_db.query(`
+	targets_db.run(`
 		CREATE TABLE IF NOT EXISTS Lexical_Features (
 			project			TEXT,
 			part_of_speech	TEXT,
@@ -120,7 +120,7 @@ function create_tabitha_table(targets_db: Database) {
 			value				TEXT,
 			notes				TEXT
 		)
-	`).run()
+	`)
 
 	console.log('done.')
 
@@ -131,10 +131,10 @@ function load_data(targets_db: Database, project: string, transformed_data: Tran
 	console.log(`Loading data into Lexical_Features table...`)
 
 	transformed_data.map(async ({part_of_speech, feature, position, code, value, notes}) => {
-		targets_db.query(`
+		targets_db.run(`
 			INSERT INTO Lexical_Features (project, part_of_speech, feature, position, code, value, notes)
 			VALUES (?, ?, ?, ?, ?, ?, ?)
-		`).run(project, part_of_speech, feature, position, code, value, notes)
+		`, [project, part_of_speech, feature, position, code, value, notes])
 
 		await Bun.write(Bun.stdout, '.')
 	})

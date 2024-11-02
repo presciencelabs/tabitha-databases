@@ -1,4 +1,4 @@
-import Database, { type SQLQueryBindings } from 'bun:sqlite'
+import Database from 'bun:sqlite'
 import { find_word_context } from './example_context'
 import { transform_semantic_encoding } from './semantic_encoding'
 
@@ -42,7 +42,7 @@ async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Da
 		id_tertiary: string
 		semantic_encoding: string
 	}
-	const all_sources = db_sources.query<Source, SQLQueryBindings | SQLQueryBindings[]>(`
+	const all_sources = db_sources.query<Source, []>(`
 		SELECT type, id_primary, id_secondary, id_tertiary, semantic_encoding
 		FROM Sources
 	`).all()
@@ -161,7 +161,7 @@ function show_examples(db_ontology: Database) {
 		type ExampleContext = {
 			context_json: string
 		}
-		const examples = db_ontology.query<ExampleContext, SQLQueryBindings | SQLQueryBindings[]>(`
+		const examples = db_ontology.query<ExampleContext, string[]>(`
 			SELECT context_json
 			FROM Exhaustive_Examples
 			WHERE concept_stem = ? AND concept_sense = ? AND concept_part_of_speech = ? AND ref_id_primary = ? AND ref_id_secondary = ? AND ref_id_tertiary = ?

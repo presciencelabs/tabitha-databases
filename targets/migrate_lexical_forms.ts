@@ -1,5 +1,4 @@
-import type Database from 'bun:sqlite'
-import type { SQLQueryBindings } from 'bun:sqlite'
+import Database from 'bun:sqlite'
 import { readdir } from 'node:fs/promises'
 
 export async function migrate_lexical_forms(project: string, targets_db: Database, csv_dir: string): Promise<void> {
@@ -75,7 +74,7 @@ async function load_data(word_forms: WordFormMap, targets_db: Database, project:
 	}
 
 	for (const part_of_speech of Object.keys(word_forms)) {
-		const lexicon_words = targets_db.query<LexiconRecord, SQLQueryBindings | SQLQueryBindings[]>(`
+		const lexicon_words = targets_db.query<LexiconRecord, string[]>(`
 			SELECT *
 			FROM Lexicon
 			WHERE project = ?
@@ -87,13 +86,13 @@ async function load_data(word_forms: WordFormMap, targets_db: Database, project:
 			const from_lexicon = lexicon_words[from_word_forms.sequence_number - 1]
 
 			if (is_match({ from_word_forms, from_lexicon })) {
-				await targets_db.query(`
+				await targets_db.run(`
 					UPDATE Lexicon
 					SET forms = ?
 					WHERE project = ?
 						AND part_of_speech = ?
 						AND id = ?
-				`).run(from_word_forms.forms, project, part_of_speech, from_lexicon.id)
+				`, [from_word_forms.forms, project, part_of_speech, from_lexicon.id])
 			} else {
 				console.log(`⚠️ NOT LOADED ⚠️ due to mismatch: ${from_word_forms.stem} (from word forms) vs ${from_lexicon.stem} (from lexicon)`)
 			}

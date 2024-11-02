@@ -63,7 +63,7 @@ function summarize_version(tbta_db: Database, tabitha_db: Database) {
 function summarize_senses(tabitha_db: Database) {
 	console.log('======= Senses =======')
 
-	const results = tabitha_db.query(`
+	const results = tabitha_db.query<Concept, []>(`
 		SELECT stem, part_of_speech, sense
 		FROM Concepts
 		WHERE stem in ('be', 'love')

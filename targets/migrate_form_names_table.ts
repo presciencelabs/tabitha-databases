@@ -1,4 +1,4 @@
-import Database, { type SQLQueryBindings } from 'bun:sqlite'
+import Database from 'bun:sqlite'
 
 export function migrate_form_names_table(tbta_db: Database, project: string, targets_db: Database) {
 	const transformed_data = transform_tbta_data(tbta_db)
@@ -39,7 +39,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 
 		  ORDER BY SyntacticCategory
 	  `
-		const results = tbta_db.prepare<DbRow, SQLQueryBindings | SQLQueryBindings[]>(sql).all()
+		const results = tbta_db.prepare<DbRow, []>(sql).all()
 
 		console.log('done.')
 
@@ -64,14 +64,14 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 function create_tabitha_table(targets_db: Database) {
 	console.log(`Creating Form_Names table in ${targets_db.filename}...`)
 
-	targets_db.query(`
+	targets_db.run(`
 		CREATE TABLE IF NOT EXISTS Form_Names (
 			project			TEXT,
 			part_of_speech	TEXT,
 			name				TEXT,
 			position			INTEGER
 		)
-	`).run()
+	`)
 
 	console.log('done.')
 
@@ -82,10 +82,10 @@ function load_data(targets_db: Database, project: string, transformed_data: Tran
 	console.log(`Loading data into Form_Names table...`)
 
 	transformed_data.map(async ({part_of_speech, name, position}) => {
-		targets_db.query(`
+		targets_db.run(`
 			INSERT INTO Form_Names (project, part_of_speech, name, position)
 			VALUES (?, ?, ?, ?)
-			`).run(project, part_of_speech, name, position)
+			`, [project, part_of_speech, name, position])
 
 		await Bun.write(Bun.stdout, '.')
 	})
