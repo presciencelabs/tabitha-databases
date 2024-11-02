@@ -1,5 +1,5 @@
 type Concept = {
-	id: number
+	id?: number
 	stem: string
 	sense: string
 	part_of_speech: string

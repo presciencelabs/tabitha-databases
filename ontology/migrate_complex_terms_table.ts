@@ -77,10 +77,10 @@ function load_data(tabitha_db: Database, terms: ComplexTerm[]) {
 	console.log(`Loading data into Complex_Terms table...`)
 
 	terms.map(async ({term, part_of_speech, structure, pairing, explication}: ComplexTerm) => {
-		tabitha_db.query(`
+		tabitha_db.run(`
 			INSERT INTO Complex_Terms (term, part_of_speech, structure, pairing, explication)
 			VALUES (?,?,?,?,?)
-		`).run(term, part_of_speech, structure, pairing, explication)
+		`, [term, part_of_speech, structure, pairing, explication])
 
 		await Bun.write(Bun.stdout, '.')
 	})

@@ -17,13 +17,13 @@ export function migrate_senses(tabitha_db: Database) {
 	console.log('adding senses to db')
 
 	sensed_concepts.map(async ({id, stem, part_of_speech, sense}) => {
-		tabitha_db.query(`
+		tabitha_db.run(`
 			UPDATE Concepts
 			SET sense = ?
 			WHERE id = ?
 				AND stem = ?
 				AND part_of_speech = ?
-		`).run(sense, id, stem, part_of_speech)
+		`, [sense, id ?? -1, stem, part_of_speech])
 
 		await Bun.write(Bun.stdout, '.')
 	})
