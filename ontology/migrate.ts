@@ -14,7 +14,7 @@ const tbta_db = new Database(tbta_db_name)
 const tabitha_db = new Database(tabitha_db_name)
 
 // drastic perf improvement: https://www.sqlite.org/pragma.html#pragma_journal_mode
-tabitha_db.exec('PRAGMA journal_mode = WAL')
+tabitha_db.run('PRAGMA journal_mode = WAL')
 
 migrate_concepts_table(tbta_db, tabitha_db)
 migrate_version_table(tbta_db, tabitha_db)
@@ -26,7 +26,7 @@ const sources_db = new Database(sources_db_name)
 await load_examples(tabitha_db, sources_db)
 
 console.log(`Optimizing ${tabitha_db_name}...`)
-tabitha_db.query(`VACUUM`).run()
+tabitha_db.run(`VACUUM`)
 console.log('done.')
 
 console.log(`Migration summary:`)

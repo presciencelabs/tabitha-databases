@@ -1,13 +1,27 @@
-export function migrate_concepts_table(tbta_db, tabitha_db) {
-	const transformed_data = transform_tbta_data(tbta_db)
+import Database from 'bun:sqlite'
+
+type TransformedData = {
+	id: number
+	stem: string
+	sense: string
+	part_of_speech: string
+	occurrences: number
+	gloss: string
+	brief_gloss: string
+	categorization: string
+	curated_examples: string
+	level: number
+}
+
+export function migrate_concepts_table(tbta_db: Database, tabitha_db: Database) {
+	const transformed_data: TransformedData[] = transform_tbta_data(tbta_db)
 
 	create_tabitha_table(tabitha_db)
 
 	load_data(tabitha_db, transformed_data)
 }
 
-/** @param {import('bun:sqlite').Database} tbta_db */
-function transform_tbta_data(tbta_db) {
+function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	console.log(`Transforming data from ${tbta_db.filename}...`)
 
 	const table_name_part_of_speech_map = [
@@ -21,17 +35,17 @@ function transform_tbta_data(tbta_db) {
 		['Verbs'			, 'Verb'],
 	]
 
-	const transformed_data = table_name_part_of_speech_map.map(([table_name, part_of_speech]) => tbta_db.query(`
-			SELECT	ID								AS id,
-						Roots							AS stem,
-						''								AS sense,
-						'${part_of_speech}'		AS part_of_speech,
-						0						AS occurrences,
-						"LN Gloss"					AS gloss,
-						"Brief Gloss"				AS brief_gloss,
-						Categories					AS categorization,
-						Examples 					AS curated_examples,
-						Level							AS level
+	const transformed_data: TransformedData[] = table_name_part_of_speech_map.map(([table_name, part_of_speech]) => tbta_db.query<TransformedData, []>(`
+			SELECT	ID							AS id,
+						Roots						AS stem,
+						''							AS sense,
+						'${part_of_speech}'	AS part_of_speech,
+						0							AS occurrences,
+						"LN Gloss"				AS gloss,
+						"Brief Gloss"			AS brief_gloss,
+						Categories				AS categorization,
+						Examples 				AS curated_examples,
+						Level						AS level
 
 			FROM ${table_name}
 		`).all()
@@ -42,11 +56,10 @@ function transform_tbta_data(tbta_db) {
 	return transformed_data
 }
 
-/** @param {import('bun:sqlite').Database} tabitha_db */
-function create_tabitha_table(tabitha_db) {
+function create_tabitha_table(tabitha_db: Database) {
 	console.log(`Creating Concepts table in ${tabitha_db.filename}...`)
 
-	tabitha_db.query(`
+	tabitha_db.run(`
 		CREATE TABLE IF NOT EXISTS Concepts (
 			id						INTEGER,
 			stem					TEXT,
@@ -59,20 +72,19 @@ function create_tabitha_table(tabitha_db) {
 			curated_examples	TEXT,
 			level					INTEGER
 		)
-	`).run()
+	`)
 
 	console.log('done.')
 }
 
-/** @param {import('bun:sqlite').Database} tabitha_db */
-function load_data(tabitha_db, transformed_data) {
+function load_data(tabitha_db: Database, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Concepts table...`)
 
 	transformed_data.map(async ({id, stem, part_of_speech, occurrences, gloss, brief_gloss, categorization, curated_examples, level}) => {
-		tabitha_db.query(`
+		tabitha_db.run(`
 			INSERT INTO Concepts (id, stem, part_of_speech, occurrences, gloss, brief_gloss, categorization, curated_examples, level)
 			VALUES (?,?,?,?,?,?,?,?,?)
-		`).run(id, stem, part_of_speech, occurrences, gloss, brief_gloss, categorization, curated_examples, level)
+		`, [id, stem, part_of_speech, occurrences, gloss, brief_gloss, categorization, curated_examples, level])
 
 		await Bun.write(Bun.stdout, '.')
 	})

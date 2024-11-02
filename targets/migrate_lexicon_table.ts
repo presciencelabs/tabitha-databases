@@ -1,4 +1,4 @@
-import Database, { type SQLQueryBindings } from 'bun:sqlite'
+import Database from 'bun:sqlite'
 
 export function migrate_lexicon_table(tbta_db: Database, project: string, targets_db: Database) {
 	const transformed_data = transform_tbta_data(tbta_db, project)
@@ -50,7 +50,7 @@ function transform_tbta_data(tbta_db: Database, project: string): TransformedDat
 				FROM ${table_name}
 				ORDER BY ID
 			`
-			return tbta_db.query<TransformedData, SQLQueryBindings | SQLQueryBindings[]>(sql).all()
+			return tbta_db.query<TransformedData, []>(sql).all()
 		}).flat() // flattens data from each parts of speech table into a single array
 
 		console.log('done.')
@@ -62,7 +62,7 @@ function transform_tbta_data(tbta_db: Database, project: string): TransformedDat
 function create_tabitha_table(targets_db: Database) {
 	console.log(`Creating Lexicon table in ${targets_db.filename}...`)
 
-	targets_db.query(`
+	targets_db.run(`
 		CREATE TABLE IF NOT EXISTS Lexicon (
 			id					INTEGER,
 			project			TEXT,
@@ -73,7 +73,7 @@ function create_tabitha_table(targets_db: Database) {
 			constituents	TEXT,
 			forms				TEXT
 		)
-	`).run()
+	`)
 
 	console.log('done.')
 
@@ -84,10 +84,10 @@ function load_data(targets_db: Database, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Lexicon table...`)
 
 	transformed_data.map(async ({id, project, stem, part_of_speech, gloss, features, constituents}) => {
-		targets_db.query(`
+		targets_db.run(`
 			INSERT INTO Lexicon (id, project, stem, part_of_speech, gloss, features, constituents)
 			VALUES (?, ?, ?, ?, ?, ?, ?)
-		`).run(id, project, stem, part_of_speech, gloss.trim(), features, constituents)
+		`, [id, project, stem, part_of_speech, gloss.trim(), features, constituents])
 
 		await Bun.write(Bun.stdout, '.')
 	})

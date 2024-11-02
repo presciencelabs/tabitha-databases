@@ -1,4 +1,4 @@
-import Database, { type SQLQueryBindings } from 'bun:sqlite'
+import Database from 'bun:sqlite'
 
 export function migrate_text_table(tbta_db: Database, project: string, targets_db: Database) {
 	const transformed_data = transform_tbta_data(tbta_db)
@@ -24,7 +24,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 		console.log(`Extracting relevant table names from ${tbta_db.filename}...`)
 
 		// https://bun.sh/docs/api/sqlite#reference
-		const tbta_tablenames_for_bible_books = tbta_db.query<{ name: string }, SQLQueryBindings | SQLQueryBindings[]>(`
+		const tbta_tablenames_for_bible_books = tbta_db.query<{ name: string }, []>(`
 			SELECT *
 			FROM sqlite_master
 			WHERE type = 'table'
@@ -40,7 +40,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 		console.log(`Transforming data from ${tbta_db.filename}...`)
 
 		type DbRow = { Reference: string, Verse: string }
-		const transformed_data = table_names.map(table_name => tbta_db.query<DbRow, SQLQueryBindings | SQLQueryBindings[]>(`
+		const transformed_data = table_names.map(table_name => tbta_db.query<DbRow, []>(`
 				SELECT Reference, Verse
 				FROM ${table_name}
 				WHERE Reference NOT NULL
@@ -72,7 +72,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 function create_tabitha_table(targets_db: Database) {
 	console.log(`Creating Text table in ${targets_db.filename}...`)
 
-	targets_db.query(`
+	targets_db.run(`
 		CREATE TABLE IF NOT EXISTS Text (
 			project	TEXT,
 			book 		TEXT,
@@ -80,7 +80,7 @@ function create_tabitha_table(targets_db: Database) {
 			verse 	INTEGER,
 			text 		TEXT
 		)
-	`).run()
+	`)
 
 	console.log('done.')
 
@@ -91,10 +91,10 @@ function load_data(targets_db: Database, project: string, transformed_data: Tran
 	console.log(`Loading data into Text table...`)
 
 	transformed_data.map(async ({book, chapter, verse, text}) => {
-		targets_db.query(`
+		targets_db.run(`
 			INSERT INTO Text (project, book, chapter, verse, text)
 			VALUES (?, ?, ?, ?, ?)
-		`).run(project, book, chapter, verse, text)
+		`, [project, book, chapter, verse, text])
 
 		await Bun.write(Bun.stdout, '.')
 	})

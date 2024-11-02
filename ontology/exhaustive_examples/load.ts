@@ -1,4 +1,4 @@
-import Database, { type SQLQueryBindings } from 'bun:sqlite'
+import Database from 'bun:sqlite'
 import { find_word_context } from './example_context'
 import { transform_semantic_encoding } from './semantic_encoding'
 
@@ -14,7 +14,7 @@ export async function load_examples(db_ontology: Database, db_sources: Database)
 function create_or_clear_examples_table(db_ontology: Database) {
 	console.log(`Creating and/or clearing Exhaustive_Examples table in ${db_ontology.filename}...`)
 
-	db_ontology.query(`
+	db_ontology.run(`
 		CREATE TABLE IF NOT EXISTS Exhaustive_Examples (
 			concept_stem				TEXT,
 			concept_sense				TEXT,
@@ -25,10 +25,10 @@ function create_or_clear_examples_table(db_ontology: Database) {
 			ref_id_tertiary			TEXT,
 			context_json				TEXT
 		)
-	`).run()
+	`)
 
-	db_ontology.query('DELETE FROM Exhaustive_Examples').run()
-	db_ontology.query('UPDATE Concepts SET occurrences = 0').run()
+	db_ontology.run('DELETE FROM Exhaustive_Examples')
+	db_ontology.run('UPDATE Concepts SET occurrences = 0')
 
 	console.log('done.')
 }
@@ -42,7 +42,7 @@ async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Da
 		id_tertiary: string
 		semantic_encoding: string
 	}
-	const all_sources = db_sources.query<Source, SQLQueryBindings | SQLQueryBindings[]>(`
+	const all_sources = db_sources.query<Source, []>(`
 		SELECT type, id_primary, id_secondary, id_tertiary, semantic_encoding
 		FROM Sources
 	`).all()
@@ -68,10 +68,10 @@ async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Da
 			.filter(pair => pair.length)
 			.forEach(([entity, context]) => {
 				const stem = entity.value.split('/')[0]	// remove a pairing
-				db_ontology.query(`
+				db_ontology.run(`
 					INSERT INTO Exhaustive_Examples (concept_stem, concept_sense, concept_part_of_speech, ref_type, ref_id_primary, ref_id_secondary, ref_id_tertiary, context_json)
 					VALUES (?,?,?,?,?,?,?,?)
-				`).run(stem, entity.sense, entity.label, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context))
+				`, [stem, entity.sense, entity.label, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context)])
 			})
 
 		await Bun.write(Bun.stdout, '.')
@@ -84,7 +84,7 @@ async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Da
 async function update_occurrences(db_ontology: Database) {
 	console.log('Updating occurrences count for each concept...')
 
-	db_ontology.query(`
+	db_ontology.run(`
 		UPDATE Concepts
 		SET occurrences = Examples.occurrences
 		FROM (
@@ -96,7 +96,7 @@ async function update_occurrences(db_ontology: Database) {
 			GROUP BY stem, sense, part_of_speech
 		) AS Examples
 		WHERE Concepts.stem = Examples.stem AND Concepts.sense = Examples.sense AND Concepts.part_of_speech = Examples.part_of_speech
-	`).run()
+	`)
 
 	console.log('done!')
 }
@@ -161,7 +161,7 @@ function show_examples(db_ontology: Database) {
 		type ExampleContext = {
 			context_json: string
 		}
-		const examples = db_ontology.query<ExampleContext, SQLQueryBindings | SQLQueryBindings[]>(`
+		const examples = db_ontology.query<ExampleContext, string[]>(`
 			SELECT context_json
 			FROM Exhaustive_Examples
 			WHERE concept_stem = ? AND concept_sense = ? AND concept_part_of_speech = ? AND ref_id_primary = ? AND ref_id_secondary = ? AND ref_id_tertiary = ?
@@ -182,7 +182,7 @@ function show_top_occurrences(db_ontology: Database) {
 		part_of_speech: string
 		occurrences: number
 	}
-	const top_occurrences = db_ontology.query<OccurrenceData, SQLQueryBindings | SQLQueryBindings[]>(`
+	const top_occurrences = db_ontology.query<OccurrenceData, []>(`
 		SELECT stem, sense, part_of_speech, occurrences
 		FROM Concepts
 		ORDER BY occurrences + 0 DESC

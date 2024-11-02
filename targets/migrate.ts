@@ -15,7 +15,7 @@ const tbta_db = new Database(tbta_db_name)
 const targets_db 	= new Database(targets_db_name)
 
 // drastic perf improvement: https://www.sqlite.org/pragma.html#pragma_journal_mode
-targets_db.exec('PRAGMA journal_mode = WAL')
+targets_db.run('PRAGMA journal_mode = WAL')
 
 await $`./targets/inflections/transform.sh ./targets/inflections`
 migrate_text_table(tbta_db, project, targets_db)
@@ -25,5 +25,5 @@ migrate_form_names_table(tbta_db, project, targets_db)
 migrate_lexical_features_table(tbta_db, project, targets_db)
 
 console.log(`Optimizing ${targets_db_name}...`)
-targets_db.query(`VACUUM`).run()
+targets_db.run(`VACUUM`)
 console.log('done.')

@@ -1,6 +1,8 @@
-export function migrate_senses(tabitha_db) {
+import Database from 'bun:sqlite'
+
+export function migrate_senses(tabitha_db: Database) {
 	// https://bun.sh/docs/api/sqlite#reference
-	const concepts = tabitha_db.query(`
+	const concepts = tabitha_db.query<Concept, []>(`
 		SELECT	id,
 					stem,
 					part_of_speech
@@ -15,13 +17,13 @@ export function migrate_senses(tabitha_db) {
 	console.log('adding senses to db')
 
 	sensed_concepts.map(async ({id, stem, part_of_speech, sense}) => {
-		tabitha_db.query(`
+		tabitha_db.run(`
 			UPDATE Concepts
 			SET sense = ?
 			WHERE id = ?
 				AND stem = ?
 				AND part_of_speech = ?
-		`).run(sense, id, stem, part_of_speech)
+		`, [sense, id ?? -1, stem, part_of_speech])
 
 		await Bun.write(Bun.stdout, '.')
 	})
@@ -29,9 +31,14 @@ export function migrate_senses(tabitha_db) {
 	console.log('done.')
 }
 
-function derive_senses(concepts) {
-	const sensed_concepts = []
-	const sense_tracker = new Map()
+function derive_senses(concepts: Concept[]): Concept[] {
+	const sensed_concepts: Concept[] = []
+
+	type Key = string // Stem:PartOfSpeech
+	type Sense = string // a single character that starts with 'A'
+	type SenseTracker = Map<Key, Sense>
+
+	const sense_tracker: SenseTracker = new Map()
 
 	for (const concept of concepts) {
 		const {stem, part_of_speech} = concept
@@ -43,17 +50,12 @@ function derive_senses(concepts) {
 			sense,
 		})
 
-		sense_tracker.set(key, next_sense(sense))
+		sense_tracker.set(key, next(sense))
 	}
 
 	return sensed_concepts
 
-	/**
-	 * @param {string} sense - a single character that started with 'A'
-	 *
-	 * @returns {string} - the next character in the alphabet
-	 */
-	function next_sense(sense) {
+	function next(sense: Sense): Sense {
 		return String.fromCharCode(sense.charCodeAt(0) + 1)
 	}
 }
