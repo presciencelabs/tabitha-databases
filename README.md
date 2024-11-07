@@ -119,7 +119,11 @@ From within the `complex_terms` dir:
 1. Once the new sqlite db and the inflections are in place, they can be part of the same `commit` and pushed.
 1. Manually run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
 
-## Local migration
+### Auth
+
+This database should not need to be deployed on a regular basis.  Updates will either be made directly to an already deployed database or via an app.
+
+## Local migrations
 
 ### Ontology
 
@@ -152,3 +156,9 @@ From within the `complex_terms` dir:
 #### Dump to a `.sql` file
 
 `sqlite3 databases/Targets.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Targets.YYYY-MM-DD.tabitha.sqlite.sql`
+
+### Auth
+
+If needed, the database can be recreated using `bun auth/create.ts`
+
+Typically, for local testing, one will need to interact with the database that has been loaded into a project's wrangler environment to add users to the User table.
