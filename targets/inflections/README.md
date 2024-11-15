@@ -8,23 +8,8 @@ in "take" and that stem has a chance to be found.
 
 # Extracting word forms from TBTA
 
-1. Use the English project
-1. Lexicon -> [Nouns|Verbs|Adjectives|Adverbs] -> (View)Forms -> (Function)Export to File
-	1. Nouns: **only include** `Stem, Plural`
-	1. Verbs: **only include** `Stem, Past, Perfect, Participle, Third Singular Present`
-	1. Adjectives: **only include** `Stem, Comparative, Superlative`
-	1. Adverbs: **only include** `Stem, Comparative, Superlative`
-1. Ensure "Blank line between entries" is checked
-1. Click OK
-1. Save output to an appropriately named file, e.g., `lexical_forms_[nouns|verbs|adverbs|adjectives].win.txt`
-1. Ensure data was exported properly
-
-# Preparing for database load
-
+1. On a Windows machine, run `TBTA.exe --export-lexical-forms <output directory>`
 1. Place all `*.win.txt` files into the `win` directory
+1. run `./transform.sh`
 
-## Local dev and test
-
-run `./transform.sh` after files have been placed into the `win` directory
-
-This script will populate `csv` with the newly transformed files
+This script will populate `csv` with the newly transformed files.  The files will be used in the next `English.mdb` migration.
