@@ -12,11 +12,13 @@ type TransformedData = {
 	book: string
 	chapter: number
 	verse: number
+	audience: string
 	text: string
 }
 function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	const table_names = extract_table_names()
-	const transformed_data = transform_data(table_names)
+	const audience_names = extract_audience_names()
+	const transformed_data = transform_data(table_names, audience_names)
 
 	return transformed_data
 
@@ -36,7 +38,23 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 		return tbta_tablenames_for_bible_books
 	}
 
-	function transform_data(table_names: string[]) {
+	function extract_audience_names() {
+		console.log(`Extracting audience names from ${tbta_db.filename}...`)
+
+		const tbta_audiences = tbta_db.prepare<{ Audiences: string }, []>(`
+			SELECT Audiences
+			FROM Properties
+			LIMIT 1
+		`).get()?.Audiences ?? ''
+
+		const audience_names = [...tbta_audiences.matchAll(/\^(.+?);/g)].map(m => m[1])
+
+		console.log('done.')
+
+		return audience_names
+	}
+
+	function transform_data(table_names: string[], audience_names: string[]) {
 		console.log(`Transforming data from ${tbta_db.filename}...`)
 
 		type DbRow = { Reference: string, Verse: string }
@@ -44,27 +62,28 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 				SELECT Reference, Verse
 				FROM ${table_name}
 				WHERE Reference NOT NULL
-			`).all().map(transform) // array of books
+			`).all().map(transform).flat() // array of books
 		).flat() // flattens all 66 books into one array of all verses
 
 		console.log('done.')
 
 		return transformed_data
 
-		function transform({Reference, Verse}: DbRow) {
+		function transform({Reference, Verse}: DbRow): TransformedData[] {
 			// References are expected to look like this: "Daniel 3:9"
 			const [, book, chapter, verse] = /(.*) (\d+):(\d+)/.exec(Reference) ?? []
 
-			// Verse looks like this: "Those astrologers said to King Nebuchadnezzar, “May you, the king, live forever!~!~(NP those[Pre-Nominal] astrologer+s[Plural] ) (VP said ) (NP to (NP _ King ) Nebuchadnezzar ) [ ,_“ (VP may[CP-VP] ) (NP you (NP , the[Pre-Nominal] king , ) ) (VP live ) (AdvP forever ) ! ] . Those astrologers said to King Nebuchadnezzar, “May you, the king, live forever! Those astrologers said to the king, “We hope that you'll live forever.~!~(NP those[Pre-Nominal] astrologer+s[Plural] ) (VP said ) (NP to the[Pre-Nominal] king ) [ ,_“ (NP we ) (VP hope ) [ that[Complementizer] (NP you ) (VP will[Pre-Verbal] live ) (AdvP forever ) ] ] . "
-			// 	note: can also be empty
-			const [, text] = /(.*?)~!~/.exec(Verse) ?? [,'']
+			// Each audience text is separated on its own line, and may or may not be followed by annotated text marked with '~!~'
+			// A line may be blank if there is no saved text for that audience
+			const audience_texts = Verse.split('\n').map(audience_text => audience_text.split('~!~')[0])
 
-			return {
+			return audience_texts.map((text, index) => ({
 				book,
 				chapter: Number(chapter),
 				verse: Number(verse),
+				audience: audience_names[index],
 				text,
-			}
+			})).filter(data => data.text)
 		}
 	}
 }
@@ -78,6 +97,7 @@ function create_tabitha_table(targets_db: Database) {
 			book 		TEXT,
 			chapter 	INTEGER,
 			verse 	INTEGER,
+			audience	TEXT,
 			text 		TEXT
 		)
 	`)
@@ -90,11 +110,11 @@ function create_tabitha_table(targets_db: Database) {
 function load_data(targets_db: Database, project: string, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Text table...`)
 
-	transformed_data.map(async ({book, chapter, verse, text}) => {
+	transformed_data.map(async ({book, chapter, verse, audience, text }) => {
 		targets_db.run(`
-			INSERT INTO Text (project, book, chapter, verse, text)
-			VALUES (?, ?, ?, ?, ?)
-		`, [project, book, chapter, verse, text])
+			INSERT INTO Text (project, book, chapter, verse, audience, text)
+			VALUES (?, ?, ?, ?, ?, ?)
+		`, [project, book, chapter, verse, audience, text])
 
 		await Bun.write(Bun.stdout, '.')
 	})
