@@ -70,6 +70,8 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 		return transformed_data
 
 		function transform({Reference, Verse}: DbRow): TransformedData[] {
+			if (! Verse) return []
+
 			// References are expected to look like this: "Daniel 3:9"
 			const [, book, chapter, verse] = /(.*) (\d+):(\d+)/.exec(Reference) ?? []
 
