@@ -167,7 +167,8 @@ function format_clause(clause_index: number, source_entities: SourceEntity[]): s
 }
 
 function find_containing_phrase(index: number, source_entities: SourceEntity[]): number {
-	return find_entity_before(is_opening_phrase, { skip_phrases: true, break_condition: is_opening_any_clause })(index, source_entities)
+	// skip_clauses must also be true in case of a relative clause in a NP
+	return find_entity_before(is_opening_phrase, { skip_phrases: true, skip_clauses: true, break_condition: is_opening_any_clause })(index, source_entities)
 }
 
 function find_containing_clause(index: number, source_entities: SourceEntity[]): number {
