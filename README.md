@@ -125,6 +125,12 @@ This database should not need to be deployed on a regular basis.  Updates will e
 
 ## Local migrations
 
+> _order coupling_
+>
+> * Bible -> Sources -> Ontology
+> * Inflections -> English -> Targets
+
+
 ### Ontology
 
 #### Create the TaBiThA database from an `.mdb`
