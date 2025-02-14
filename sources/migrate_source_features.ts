@@ -62,7 +62,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	  `
 		const results = tbta_db.prepare<DbRow, []>(sql).all().map(row => ({
 			...row,
-			encoded_examples: row.encoded_examples.trim(), // sometimes examples start with non-printable characters or whitespace
+			encoded_examples: row.encoded_examples?.trim() ?? '', // sometimes examples start with non-printable characters, whitespace or may be NULL
 		}))
 
 		console.log('done.')
@@ -174,4 +174,3 @@ function load_data(targets_db: Database, transformed_data: TransformedData[]) {
 
 	console.log('done.')
 }
-
