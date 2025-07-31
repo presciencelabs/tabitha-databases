@@ -3,7 +3,7 @@
 # https://developers.cloudflare.com/workers/wrangler/configuration/#inheritable-keys
 name = "sync_complex_terms"
 main = "index.js"
-compatibility_date = "2024-10-25"
+compatibility_date = "2025-07-31"
 workers_dev = false
 
 # https://developers.cloudflare.com/workers/configuration/cron-triggers
