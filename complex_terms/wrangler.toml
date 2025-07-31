@@ -12,5 +12,8 @@ crons = ["0 */12 * * *"]
 
 [[d1_databases]]
 binding = "DB_Ontology" # i.e. available in a Worker on env.DB
-database_name = "Ontology.9489.2024-10-24"
-database_id = "23ef1537-9183-49cd-85ce-935ea0c444bc"
+database_name = "Ontology.9492.2025-07-25"
+database_id = "6554f55d-da7a-4e3b-9af2-40a749f99095"
+
+[observability.logs]
+enabled = true
