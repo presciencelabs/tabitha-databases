@@ -40,19 +40,11 @@ type ComplexTerm = {
 }
 export function transform(rows: TabSeparatedValues[]): ComplexTerm[] {
 	return rows.map((row: TabSeparatedValues) => {
-		let [term, part_of_speech, structure, pairing, explication, ontology_status] = row.split('\t')
-
-		if (!term || !term.trim()) {
-			term = 'missing_from_how-to_data'
-		}
-
-		if (!part_of_speech) {
-			part_of_speech = 'missing_from_how-to_data'
-		}
+		const [term, part_of_speech, structure, pairing, explication, ontology_status] = row.split('\t')
 
 		return {
-			term: term.trim(),
-			part_of_speech: capitalize(part_of_speech.trim()),
+			term: (term ?? '').trim(),
+			part_of_speech: capitalize(part_of_speech),
 			structure,
 			pairing,
 			explication,
@@ -61,7 +53,12 @@ export function transform(rows: TabSeparatedValues[]): ComplexTerm[] {
 	})
 
 	function capitalize(text: string) {
-		return `${text[0].toUpperCase()}${text.slice(1)}`
+		const REGEX_FIRST_CHARACTER = /^./
+
+		return (text ?? '')
+			.trim()
+			.toLowerCase()
+			.replace(REGEX_FIRST_CHARACTER, c => c.toUpperCase())
 	}
 }
 
