@@ -1,4 +1,4 @@
-import Database from 'bun:sqlite'
+import type { Database } from 'bun:sqlite'
 
 export async function migrate_complex_terms_table(tabitha_db: Database) {
 	const extracted_rows = await extract()
