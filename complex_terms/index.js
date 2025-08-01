@@ -29,13 +29,14 @@ export default {
 					'part_of_speech' 	TEXT,
 					'structure'		 	TEXT,
 					'pairing' 			TEXT,
-					'explication' 		TEXT
+					'explication' 		TEXT,
+					'ontology_status'	TEXT
 				)
 			`).run()
 
 			const clear_stmt = db.prepare('DELETE FROM Complex_Terms')
-			const insert_stmt = db.prepare('INSERT INTO Complex_Terms VALUES (?, ?, ?, ?, ?)')
-			const insert_stmts = terms.map(({ term, part_of_speech, structure, pairing, explication }) => insert_stmt.bind(term, part_of_speech, structure, pairing, explication))
+			const insert_stmt = db.prepare('INSERT INTO Complex_Terms VALUES (?, ?, ?, ?, ?, ?)')
+			const insert_stmts = terms.map(({ term, part_of_speech, structure, pairing, explication, ontology_status }) => insert_stmt.bind(term, part_of_speech, structure, pairing, explication, ontology_status))
 
 			console.log('updating table with latest data')
 
