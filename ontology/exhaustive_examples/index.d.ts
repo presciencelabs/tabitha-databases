@@ -3,7 +3,8 @@ type SourceEntity = {
 	label: string
 	features: string
 	value: string
-	sense: string
+	concept: Concept|null
+	pairing: Concept|null
 }
 
 type Reference = {
