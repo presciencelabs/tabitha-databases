@@ -154,10 +154,10 @@ function get_outer_context(phrase_index: number, source_entities: SourceEntity[]
 }
 
 function format_concept(entity: SourceEntity) {
-	// remove the pairing part of the value
-	const stem = entity.value.split('/')[0]
-
-	return `${stem}-${entity.sense}`
+	if (!entity.concept) {
+		return entity.value
+	}
+	return `${entity.concept.stem}-${entity.concept.sense}`
 }
 
 function format_clause(clause_index: number, source_entities: SourceEntity[]): string {
@@ -202,7 +202,7 @@ function get_head_word(phrase_index: number, source_entities: SourceEntity[]): S
 	if (head_index === -1) {
 		console.error(`Invalid semantic encoding - missing head ${word_type} in ${phrase_type}`)
 
-		return { type: '', label: word_type[0], features: '......................', value: '', sense: '' }
+		return { type: '', label: word_type[0], features: '......................', value: '', concept: null, pairing: null }
 	}
 
 	return source_entities[head_index]

@@ -6,7 +6,7 @@ import { migrate_senses } from './migrate_senses'
 import { migrate_version_table } from './migrate_version_table'
 import { summarize_migration } from './summarize_migration'
 
-// usage: `bun ontology/migrate.js databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
+// usage: `bun ontology/migrate.ts databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
 const tbta_db_name 		= Bun.argv[2]	// databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite
 const tabitha_db_name 	= Bun.argv[4]	// databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite
 

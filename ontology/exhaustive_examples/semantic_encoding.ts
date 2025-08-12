@@ -145,14 +145,34 @@ export function transform_semantic_encoding(semantic_encoding: string): SourceEn
 		const features = entity_match[2] ?? ''
 		const value = entity_match[3]
 		const label = ENTITY_LABEL_LOOKUP.get(type) || ''
-		const sense = WORD_ENTITY_TYPES.has(type) ? features[1] : ''
+		let concept: Concept|null = null
+		let pairing: Concept|null = null
+
+		if (WORD_ENTITY_TYPES.has(type)) {
+			const pairing_split = value.split('/')
+			concept = {
+				stem: pairing_split[0],
+				sense: features[1],
+				part_of_speech: label,
+			}
+			if (pairing_split.length > 1) {
+				// has a pairing; e.g., "follower/Adisciple"
+				// the first letter of the pairing is always the sense
+				pairing = {
+					stem: pairing_split[1].substring(1),
+					sense: pairing_split[1][0],
+					part_of_speech: label,
+				}
+			}
+		}
 
 		return {
 			type,
 			label,
 			features,
-			sense,
 			value,
+			concept,
+			pairing,
 		}
 	}
 }

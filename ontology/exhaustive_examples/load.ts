@@ -48,7 +48,7 @@ async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Da
 	`).all()
 	console.log(`Fetched ${all_sources.length} verses`)
 
-	let current_reference = { id_primary: '', id_secondary: '' }
+	let current_reference: Reference = { type: '', id_primary: '', id_secondary: '', id_tertiary: '' }
 	for (const { semantic_encoding, type, id_primary, id_secondary, id_tertiary } of all_sources) {
 		if (id_primary !== current_reference.id_primary) {
 			console.log()
@@ -60,18 +60,30 @@ async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Da
 			await Bun.write(Bun.stdout, id_secondary)
 		}
 
-		current_reference = { id_primary, id_secondary }
+		current_reference = { type, id_primary, id_secondary, id_tertiary }
 
 		// For each word encountered, add the current verse reference to that word's examples
 		transform_semantic_encoding(semantic_encoding)
-			.map((entity, index, source_entities) => entity.sense ? [entity, find_word_context(index, source_entities)] : [])
-			.filter(pair => pair.length)
+			.map<[SourceEntity, ContextArguments|null]>((entity, index, source_entities) => entity.concept ? [entity, find_word_context(index, source_entities)] : [entity, null])
 			.forEach(([entity, context]) => {
-				const stem = entity.value.split('/')[0]	// remove a pairing
-				db_ontology.run(`
-					INSERT INTO Exhaustive_Examples (concept_stem, concept_sense, concept_part_of_speech, ref_type, ref_id_primary, ref_id_secondary, ref_id_tertiary, context_json)
-					VALUES (?,?,?,?,?,?,?,?)
-				`, [stem, entity.sense, entity.label, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context)])
+				if (!context || !entity.concept) {
+					return
+				}
+				
+				if (entity.pairing) {
+					// A pairing will have the same context as the main concept.
+					// Add a context argument to indicate the word each half is paired with.
+					record_occurrence(db_ontology, entity.concept, current_reference, {
+						...context,
+						'Pairing': `${entity.pairing.stem}-${entity.pairing.sense}`,
+					})
+					record_occurrence(db_ontology, entity.pairing, current_reference, {
+						...context,
+						'Pairing': `${entity.concept.stem}-${entity.concept.sense}`,
+					})
+				} else {
+					record_occurrence(db_ontology, entity.concept, current_reference, context)
+				}
 			})
 
 		await Bun.write(Bun.stdout, '.')
@@ -79,6 +91,15 @@ async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Da
 
 	console.log()
 	console.log('done!')
+}
+
+function record_occurrence(db_ontology: Database, concept: Concept, reference: Reference, context: ContextArguments) {
+	const { stem, sense, part_of_speech } = concept
+	const { type, id_primary, id_secondary, id_tertiary } = reference
+	db_ontology.run(`
+		INSERT INTO Exhaustive_Examples (concept_stem, concept_sense, concept_part_of_speech, ref_type, ref_id_primary, ref_id_secondary, ref_id_tertiary, context_json)
+		VALUES (?,?,?,?,?,?,?,?)
+	`, [stem, sense, part_of_speech, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context)])
 }
 
 async function update_occurrences(db_ontology: Database) {
@@ -120,6 +141,9 @@ function show_examples(db_ontology: Database) {
 	show_examples({ stem: 'bury', sense: 'A', part_of_speech: 'Verb' }, { type: 'Bible', id_primary: 'Ruth', id_secondary: '1', id_tertiary: '17' })
 	// agent proposition & predicate adjective
 	show_examples({ stem: 'be', sense: 'V', part_of_speech: 'Verb' }, { type: 'Grammar Introduction', id_primary: 'Clauses', id_secondary: '1', id_tertiary: '67' })
+	// complex pairing
+	show_examples({ stem: 'cry', sense: 'A', part_of_speech: 'Verb' }, { type: 'Bible', id_primary: 'Ruth', id_secondary: '1', id_tertiary: '14' })
+	show_examples({ stem: 'weep', sense: 'A', part_of_speech: 'Verb' }, { type: 'Bible', id_primary: 'Ruth', id_secondary: '1', id_tertiary: '14' })
 
 	console.log('======= Adjective Examples =======')
 	// modified noun
@@ -132,6 +156,9 @@ function show_examples(db_ontology: Database) {
 	show_examples({ stem: 'old', sense: 'A', part_of_speech: 'Adjective' }, { type: 'Bible', id_primary: 'Ruth', id_secondary: '1', id_tertiary: '12' })
 	// comparative degree & patient noun
 	show_examples({ stem: 'good', sense: 'A', part_of_speech: 'Adjective' }, { type: 'Bible', id_primary: 'Ruth', id_secondary: '4', id_tertiary: '15' })
+	// complex pairing
+	show_examples({ stem: 'sad', sense: 'A', part_of_speech: 'Adjective' }, { type: 'Bible', id_primary: 'Ruth', id_secondary: '1', id_tertiary: '13' })
+	show_examples({ stem: 'bitter', sense: 'B', part_of_speech: 'Adjective' }, { type: 'Bible', id_primary: 'Ruth', id_secondary: '1', id_tertiary: '13' })
 
 	console.log('======= Adverb Examples =======')
 	// modified noun
