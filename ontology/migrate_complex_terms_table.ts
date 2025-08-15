@@ -21,8 +21,8 @@ export async function extract() {
 
 	const raw_data = await response.text()
 
-	// skip first two rows (headers)
-	const [,, ...rows] = raw_data.split(/\r?\n/)
+	// skip first three rows (headers)
+	const [,,, ...rows] = raw_data.split(/\r?\n/)
 
 	console.log(`received ${rows.length} rows from spreadsheet`)
 
@@ -31,7 +31,8 @@ export async function extract() {
 
 type TabSeparatedValues = string
 type ComplexTerm = {
-	term: string
+	stem: string
+	sense: string
 	part_of_speech: string
 	structure: string
 	pairing: string
@@ -41,9 +42,12 @@ type ComplexTerm = {
 export function transform(rows: TabSeparatedValues[]): ComplexTerm[] {
 	return rows.map((row: TabSeparatedValues) => {
 		const [term, part_of_speech, structure, pairing, explication, ontology_status] = row.split('\t')
+		const match = (term ?? '').trim().match(/^(.*)-([A-Z])$/)
+		const [stem, sense] = match ? [match[1], match[2]] : [term, '']
 
 		return {
-			term: (term ?? '').trim(),
+			stem,
+			sense,
 			part_of_speech: capitalize(part_of_speech),
 			structure,
 			pairing,
@@ -67,12 +71,13 @@ function create_tabitha_table(tabitha_db: Database) {
 
 	tabitha_db.run(`
 		CREATE TABLE IF NOT EXISTS Complex_Terms (
-			term					TEXT,
-			part_of_speech		TEXT,
-			structure			TEXT,
-			pairing				TEXT,
-			explication			TEXT,
-			ontology_status	TEXT
+			'stem' 				TEXT,
+			'sense'				TEXT,
+			'part_of_speech' 	TEXT,
+			'structure'		 	TEXT,
+			'pairing' 			TEXT,
+			'explication' 		TEXT,
+			'ontology_status'	TEXT,
 		)
 	`)
 
@@ -84,11 +89,11 @@ function create_tabitha_table(tabitha_db: Database) {
 function load_data(tabitha_db: Database, terms: ComplexTerm[]) {
 	console.log(`Loading data into Complex_Terms table...`)
 
-	terms.map(async ({term, part_of_speech, structure, pairing, explication, ontology_status}: ComplexTerm) => {
+	terms.map(async ({stem, sense, part_of_speech, structure, pairing, explication, ontology_status}: ComplexTerm) => {
 		tabitha_db.run(`
-			INSERT INTO Complex_Terms (term, part_of_speech, structure, pairing, explication, ontology_status)
+			INSERT INTO Complex_Terms (stem, sense, part_of_speech, structure, pairing, explication, ontology_status)
 			VALUES (?,?,?,?,?,?)
-		`, [term, part_of_speech, structure, pairing, explication, ontology_status])
+		`, [stem, sense, part_of_speech, structure, pairing, explication, ontology_status])
 
 		await Bun.write(Bun.stdout, '.')
 	})
