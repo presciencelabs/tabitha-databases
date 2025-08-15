@@ -92,7 +92,7 @@ function load_data(tabitha_db: Database, terms: ComplexTerm[]) {
 	terms.map(async ({stem, sense, part_of_speech, structure, pairing, explication, ontology_status}: ComplexTerm) => {
 		tabitha_db.run(`
 			INSERT INTO Complex_Terms (stem, sense, part_of_speech, structure, pairing, explication, ontology_status)
-			VALUES (?,?,?,?,?,?)
+			VALUES (?,?,?,?,?,?,?)
 		`, [stem, sense, part_of_speech, structure, pairing, explication, ontology_status])
 
 		await Bun.write(Bun.stdout, '.')
