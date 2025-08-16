@@ -25,7 +25,8 @@ export default {
 			// https://developers.cloudflare.com/d1/build-databases/query-databases
 			db.prepare(`
 				CREATE TABLE IF NOT EXISTS Complex_Terms (
-					'term' 				TEXT,
+					'stem' 				TEXT,
+					'sense'				TEXT,
 					'part_of_speech' 	TEXT,
 					'structure'		 	TEXT,
 					'pairing' 			TEXT,
@@ -35,8 +36,10 @@ export default {
 			`).run()
 
 			const clear_stmt = db.prepare('DELETE FROM Complex_Terms')
-			const insert_stmt = db.prepare('INSERT INTO Complex_Terms VALUES (?, ?, ?, ?, ?, ?)')
-			const insert_stmts = terms.map(({ term, part_of_speech, structure, pairing, explication, ontology_status }) => insert_stmt.bind(term, part_of_speech, structure, pairing, explication, ontology_status))
+			const insert_stmt = db.prepare('INSERT INTO Complex_Terms VALUES (?, ?, ?, ?, ?, ?, ?)')
+			const insert_stmts = terms.map(({ stem, sense, part_of_speech, structure, pairing, explication, ontology_status }) =>
+				insert_stmt.bind(stem, sense, part_of_speech, structure, pairing, explication, ontology_status)
+			)
 
 			console.log('updating table with latest data')
 
