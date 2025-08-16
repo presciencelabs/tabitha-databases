@@ -77,7 +77,7 @@ function create_tabitha_table(tabitha_db: Database) {
 			'structure'		 	TEXT,
 			'pairing' 			TEXT,
 			'explication' 		TEXT,
-			'ontology_status'	TEXT,
+			'ontology_status'	TEXT
 		)
 	`)
 
