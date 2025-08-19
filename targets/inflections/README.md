@@ -8,8 +8,9 @@ in "take" and that stem has a chance to be found.
 
 # Extracting word forms from TBTA
 
-1. On a Windows machine, run `TBTA.exe --export-lexical-forms <output directory>`
+1. On a Windows machine, drop `./tbta_cmdline.exe` into an up-to-date `TBTA` dir
+1. Run `tbta_cmdline.exe --export-lexical-forms <output directory>`
 1. Place all `*.win.txt` files into the `win` directory
 1. run `./transform.sh`
 
-This script will populate `csv` with the newly transformed files.  The files will be used in the next `English.mdb` migration.
+This script will populate `./csv` with the newly transformed files.  The files will be used in the next `English.tbta.sqlite` migration.
