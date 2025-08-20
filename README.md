@@ -86,10 +86,8 @@ From within the `complex_terms` dir:
 
 #### Deployment
 
-> ⚠️ You will need Cloudflare credentials to deploy.
-
 1. Ensure the correct database binding is set in `wrangler.toml`
-1. From within `./complex_terms/` run `wrangler deploy`
+1. Commit and push, deployment will occur automatically
 
 ### Sources
 
