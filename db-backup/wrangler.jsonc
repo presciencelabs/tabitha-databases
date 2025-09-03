@@ -1,0 +1,44 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "db-backup",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-08-07",
+
+	// https://developers.cloudflare.com/workers/wrangler/configuration/#triggers
+	// https://developers.cloudflare.com/workers/configuration/cron-triggers/#supported-cron-expressions
+	// https://developers.cloudflare.com/workers/configuration/cron-triggers/#test-cron-triggers-locally
+	"triggers": {
+		"crons": [
+			"0 0 * * *", // Every day at midnight
+		],
+	},
+
+	/**
+	 * Smart Placement
+	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+	 */
+	"placement": {
+		"mode": "smart"
+	},
+
+	//https://developers.cloudflare.com/workflows
+	"workflows": [
+		{
+			"name": "workflow-db-backup",
+			"binding": "WORKFLOW_DB_BACKUP",
+			"class_name": "DbBackupWorkflow",
+		},
+	],
+
+	// https://developers.cloudflare.com/workers/wrangler/configuration/#r2-buckets
+	"r2_buckets": [
+		{
+			"binding": "DB_BACKUP_BUCKET",
+			"bucket_name": "db-backup-ontology",
+		},
+	],
+}
