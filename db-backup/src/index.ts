@@ -4,14 +4,13 @@ import { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:work
 type Env = {
 	CLOUDFLARE_ACCOUNT_ID: string
 	CLOUDFLARE_API_TOKEN: string
-	DB_BACKUP_BUCKET: R2Bucket
+	BUCKET_DB_BACKUP: R2Bucket
 	WORKFLOW_DB_BACKUP: Workflow
 }
 
 type Params = {
 	account_id: string
 	api_token: string
-	db_name: string
 }
 
 export default {
@@ -23,7 +22,6 @@ export default {
 		const params: Params = {
 			account_id: env.CLOUDFLARE_ACCOUNT_ID,
 			api_token: env.CLOUDFLARE_API_TOKEN,
-			db_name: 'Ontology.9492.2025-08-12',
 		}
 
 		try {
@@ -40,11 +38,13 @@ export class DbBackupWorkflow extends WorkflowEntrypoint<Env, Params> {
 	async run(event: WorkflowEvent<Params>, step: WorkflowStep) {
 		console.log('Starting DB backup workflow')
 
-		const { account_id, api_token: apiToken, db_name } = event.payload
-		const bucket = this.env.DB_BACKUP_BUCKET
+		const { account_id, api_token } = event.payload
+		const bucket = this.env.BUCKET_DB_BACKUP
 
-		const client = new Cloudflare({ apiToken })
+		const client = new Cloudflare({ apiToken: api_token })
 
+		// https://developers.cloudflare.com/workflows/build/workers-api/#step
+		// default config:  https://developers.cloudflare.com/workflows/build/sleeping-and-retrying/#retry-steps
 		const db_info = await step.do('get database info', get_db_info)
 		const bookmark = await step.do('start the export', start_db_export)
 		const dump_info = await step.do('poll for completion', poll_for_completion)
@@ -53,31 +53,40 @@ export class DbBackupWorkflow extends WorkflowEntrypoint<Env, Params> {
 		async function get_db_info() {
 			console.log('Listing databases...')
 
+			// https://developers.cloudflare.com/api/node/resources/d1/subresources/database/methods/list
 			const { result } = await client.d1.database.list({
 				account_id,
-				name: db_name,
+				name: 'Ontology', // API searches for closest name match, i.e., filters list down to those starting with 'Ontology'
 			})
 
-			console.log('Found:', result)
+			// anything returned from step must be serializable, https://developers.cloudflare.com/workflows/build/workers-api/#step
+			return latest()
 
-			return result[0]
+			function latest() {
+				return result
+							// @ts-expect-error (created_at will never be undefined here)
+							.sort((a, b) => a.created_at.localeCompare(b.created_at)) // ascending, i.e., most recent at end
+							.at(-1) // last one in list
+			}
 		}
 
 		async function start_db_export() {
-			if (!db_info?.uuid) throw new Error(`No db found by the name ${db_name}`)
+			if (!db_info?.uuid || !db_info?.name) throw new Error(`Missing critical db info: ${JSON.stringify(db_info)}`)
 
 			console.log('Starting the export for: ', db_info)
 
+			// https://developers.cloudflare.com/api/node/resources/d1/subresources/database/methods/export/
 			const response = await client.d1.database.export(db_info.uuid, {
 				account_id,
 				output_format: 'polling',
 			})
 
 			// ref:  https://developers.cloudflare.com/workflows/examples/backup-d1
-			if (!response?.at_bookmark) throw new Error(`Failed to start export for db ${db_name}`)
+			if (!response?.at_bookmark) throw new Error(`Failed to start export for db ${db_info.name}`)
 
 			console.log('Export initiated:', response)
 
+			// anything returned from step must be serializable, https://developers.cloudflare.com/workflows/build/workers-api/#step
 			return response.at_bookmark
 		}
 
@@ -99,7 +108,7 @@ export class DbBackupWorkflow extends WorkflowEntrypoint<Env, Params> {
 
 		async function save_dump() {
 			// @ts-ignore CF's response structure changes based on state  :-(
-			if (!dump_info?.signed_url) throw new Error('No dump info found')
+			if (!dump_info?.signed_url || !db_info?.name) throw new Error(`No dump info found: ${JSON.stringify(dump_info)}`)
 
 			// @ts-ignore CF's response structure changes based on state  :-(
 			console.log('Saving dump to R2 for: ', dump_info.signed_url)
@@ -109,7 +118,7 @@ export class DbBackupWorkflow extends WorkflowEntrypoint<Env, Params> {
 			// @ts-ignore CF's response structure changes based on state  :-(
 			if (!dump_response.ok) throw new Error(`Failed to fetch dump file at ${dump_info.signed_url}`)
 
-			const put_response = await bucket.put(`${db_name}.tabitha.sql`, dump_response.body)
+			const put_response = await bucket.put(`${db_info.name}.tabitha.sql`, dump_response.body)
 
 			console.log('Saved dump to R2', put_response)
 		}

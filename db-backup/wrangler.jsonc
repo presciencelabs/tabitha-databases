@@ -4,9 +4,15 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "db-backup",
+	"name": "db_backup",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-08-07",
+
+	// https://developers.cloudflare.com/workers/configuration/routing/workers-dev/
+	"workers_dev": false,
+
+	// https://developers.cloudflare.com/workers/configuration/previews/
+	"preview_urls": true,
 
 	// https://developers.cloudflare.com/workers/wrangler/configuration/#triggers
 	// https://developers.cloudflare.com/workers/configuration/cron-triggers/#supported-cron-expressions
@@ -44,8 +50,8 @@
 	// https://developers.cloudflare.com/workers/wrangler/configuration/#r2-buckets
 	"r2_buckets": [
 		{
-			"binding": "DB_BACKUP_BUCKET",
-			"bucket_name": "db-backup-ontology",
+			"binding": "BUCKET_DB_BACKUP",
+			"bucket_name": "db-backup",
 		},
 	],
 }
