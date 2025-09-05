@@ -21,15 +21,8 @@ export default {
 	async scheduled(controller: ScheduledController, env: Env): Promise<void> {
 		console.log('Starting scheduled DB backup...')
 
-		if (!env.CLOUDFLARE_ACCOUNT_ID || !env.CLOUDFLARE_API_TOKEN) throw 'Missing required environment variables'
-
-		const params: Params = {
-			account_id: env.CLOUDFLARE_ACCOUNT_ID,
-			api_token: env.CLOUDFLARE_API_TOKEN,
-		}
-
 		try {
-			const instance = await env.WORKFLOW_DB_BACKUP.create({ params })
+			const instance = await env.WORKFLOW_DB_BACKUP.create()
 			await instance.status() // had to do this to get workflow to run
 		} catch (error) {
 			throw `Error creating workflow instance: ${error}`
@@ -42,10 +35,16 @@ export class DbBackupWorkflow extends WorkflowEntrypoint<Env, Params> {
 	async run(event: WorkflowEvent<Params>, step: WorkflowStep) {
 		console.log('Starting DB backup workflow')
 
-		const { account_id, api_token } = event.payload
+		if (!this.env.CLOUDFLARE_API_TOKEN) throw 'Missing API_TOKEN'
+		const apiToken = this.env.CLOUDFLARE_API_TOKEN
+
+		if (!this.env.CLOUDFLARE_ACCOUNT_ID) throw 'Missing ACCOUNT_ID'
+		const account_id = this.env.CLOUDFLARE_ACCOUNT_ID
+
+		if (!this.env.BUCKET_DB_BACKUP) throw 'Missing BUCKET_DB_BACKUP'
 		const bucket = this.env.BUCKET_DB_BACKUP
 
-		const client = new Cloudflare({ apiToken: api_token })
+		const client = new Cloudflare({ apiToken })
 
 		// https://developers.cloudflare.com/workflows/build/workers-api/#step
 		// default config:  https://developers.cloudflare.com/workflows/build/sleeping-and-retrying/#retry-steps
