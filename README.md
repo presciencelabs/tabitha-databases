@@ -115,13 +115,34 @@ From within the `complex_terms` dir:
 
 This database should not need to be deployed on a regular basis.  Updates will either be made directly to an already deployed database or via an app.
 
+### Database backups
+
+DB backups are handled via CF Workflows and stored in R2.
+
+#### Testing locally
+
+From within the `db_backup` dir:
+
+##### First time tasks
+1. `pnpm i`
+1. `cp .env.example .env` and populate the secret values
+
+##### Normal dev
+
+`pnpm dev`
+
+ Hit http://localhost:8787/cdn-cgi/handler/scheduled in a browser or separate terminal to run it.
+
+#### Deployment
+
+Commit and push, deployment will occur automatically
+
 ## Local migrations
 
 > _order coupling_
 >
 > * Bible -> Sources -> Ontology
 > * Inflections -> English -> Targets
-
 
 ### Sources
 

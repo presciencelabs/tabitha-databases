@@ -21,12 +21,9 @@ export default {
 	async scheduled(controller: ScheduledController, env: Env): Promise<void> {
 		console.log('Starting scheduled DB backup...')
 
-		try {
-			const instance = await env.WORKFLOW_DB_BACKUP.create()
-			await instance.status() // had to do this to get workflow to run
-		} catch (error) {
-			throw `Error creating workflow instance: ${error}`
-		}
+		// while throwing exceptions in here is helpful for local dev, the messages will be lost in CF runtime for some reason.
+		const instance = await env.WORKFLOW_DB_BACKUP.create()
+		await instance.status() // had to do this to get workflow to run
 	},
 }
 
