@@ -19,6 +19,8 @@ export default {
 	},
 
 	async scheduled(controller: ScheduledController, env: Env): Promise<void> {
+		if (!env.CLOUDFLARE_ACCOUNT_ID || !env.CLOUDFLARE_API_TOKEN) throw 'Missing required environment variables'
+
 		const params: Params = {
 			account_id: env.CLOUDFLARE_ACCOUNT_ID,
 			api_token: env.CLOUDFLARE_API_TOKEN,
@@ -28,7 +30,7 @@ export default {
 			const instance = await env.WORKFLOW_DB_BACKUP.create({ params })
 			await instance.status() // had to do this to get workflow to run
 		} catch (error) {
-			console.error('Error creating workflow instance:', error)
+			throw `Error creating workflow instance: ${error}`
 		}
 	},
 }
