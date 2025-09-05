@@ -19,6 +19,8 @@ export default {
 	},
 
 	async scheduled(controller: ScheduledController, env: Env): Promise<void> {
+		console.log('Starting scheduled DB backup...')
+
 		if (!env.CLOUDFLARE_ACCOUNT_ID || !env.CLOUDFLARE_API_TOKEN) throw 'Missing required environment variables'
 
 		const params: Params = {
@@ -73,7 +75,7 @@ export class DbBackupWorkflow extends WorkflowEntrypoint<Env, Params> {
 		}
 
 		async function start_db_export() {
-			if (!db_info?.uuid || !db_info?.name) throw new Error(`Missing critical db info: ${JSON.stringify(db_info)}`)
+			if (!db_info?.uuid || !db_info?.name) throw `Missing critical db info: ${JSON.stringify(db_info)}`
 
 			console.log('Starting the export for: ', db_info)
 
@@ -84,7 +86,7 @@ export class DbBackupWorkflow extends WorkflowEntrypoint<Env, Params> {
 			})
 
 			// ref:  https://developers.cloudflare.com/workflows/examples/backup-d1
-			if (!response?.at_bookmark) throw new Error(`Failed to start export for db ${db_info.name}`)
+			if (!response?.at_bookmark) throw `Failed to start export for db ${db_info.name}`
 
 			console.log('Export initiated:', response)
 
@@ -105,12 +107,12 @@ export class DbBackupWorkflow extends WorkflowEntrypoint<Env, Params> {
 			// @ts-ignore CF's response structure changes based on state  :-(
 			if (response.signed_url) return response
 
-			if (response.status === 'error') throw new Error(`Export failed: ${response.error}`)
+			if (response.status === 'error') throw `Export failed: ${response.error}`
 		}
 
 		async function save_dump() {
 			// @ts-ignore CF's response structure changes based on state  :-(
-			if (!dump_info?.signed_url || !db_info?.name) throw new Error(`No dump info found: ${JSON.stringify(dump_info)}`)
+			if (!dump_info?.signed_url || !db_info?.name) throw `No dump info found: ${JSON.stringify(dump_info)}`
 
 			// @ts-ignore CF's response structure changes based on state  :-(
 			console.log('Saving dump to R2 for: ', dump_info.signed_url)
@@ -118,7 +120,7 @@ export class DbBackupWorkflow extends WorkflowEntrypoint<Env, Params> {
 			// @ts-ignore CF's response structure changes based on state  :-(
 			const dump_response = await fetch(dump_info.signed_url)
 			// @ts-ignore CF's response structure changes based on state  :-(
-			if (!dump_response.ok) throw new Error(`Failed to fetch dump file at ${dump_info.signed_url}`)
+			if (!dump_response.ok) throw `Failed to fetch dump file at ${dump_info.signed_url}`
 
 			const put_response = await bucket.put(`${db_info.name}.tabitha.sql`, dump_response.body)
 
