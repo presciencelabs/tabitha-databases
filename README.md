@@ -117,7 +117,7 @@ This database should not need to be deployed on a regular basis.  Updates will e
 
 ### Database backups
 
-DB backups are handled via CF Workflows and stored in R2.
+DB backups are handled via `wrangler` and stored in R2.  See README in `./db_backup` for local dev
 
 #### Testing locally
 
