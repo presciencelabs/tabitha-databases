@@ -1,0 +1,17 @@
+{
+	"name": "db_backup",
+	"module": "index.ts",
+	"type": "module",
+	"scripts": {
+		"dev": "bun index.ts"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5.9.2"
+	},
+	"dependencies": {
+		"wrangler": "^4.35.0"
+	}
+}
