@@ -6,12 +6,10 @@
 		"dev": "bun index.ts"
 	},
 	"devDependencies": {
-		"@types/bun": "latest"
+		"@types/bun": "latest",
+		"wrangler": "^4.36.0"
 	},
 	"peerDependencies": {
 		"typescript": "^5.9.2"
-	},
-	"dependencies": {
-		"wrangler": "^4.35.0"
 	}
 }
