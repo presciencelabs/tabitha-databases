@@ -17,10 +17,9 @@ jobs:
             run: bun i wrangler
          -
             run: bun run wrangler --version
-         # -
-         #    uses: cloudflare/wrangler-action@v3
-         #    with:
-         #      apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_DB_BACKUPS }}
-         #      workingDirectory: "db_backup"
+         -
+            uses: cloudflare/wrangler-action@v3
+            with:
+              apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_DB_BACKUPS }}
          # -
          #    run: bun db_backup/index.ts
