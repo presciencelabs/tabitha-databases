@@ -1,17 +1,21 @@
 name: Database backup
 
 on:
-  push:
-    branches:
-      - db-backup
+   push:
+      branches:
+         - db-backup
 
 jobs:
-  backup:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        uses: actions/checkout@v4
-      -
-        uses: oven-sh/setup-bun@v2
-      -
-        run: bun db_backup/index.ts
+   backup:
+      runs-on: ubuntu-latest
+      steps:
+         -
+            uses: actions/checkout@v4
+         -
+            uses: cloudflare/wrangler-action@v3
+            with:
+              apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_DB_BACKUPS }}
+         -
+            uses: oven-sh/setup-bun@v2
+         -
+            run: bun db_backup/index.ts
