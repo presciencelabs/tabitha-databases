@@ -11,9 +11,7 @@ type DbInfo = {
 	[key: string]: string
 }
 
-const WRANGLER_CMD = 'wrangler --cwd db_backup'
-
-await $`${WRANGLER_CMD} whoami`
+await $`wrangler whoami --cwd db_backup`
 
 // get latest Ontology via wrangler
 // const db_name = await get_latest_database_name('Ontology')
