@@ -13,7 +13,7 @@ type DbInfo = {
 
 // get latest Ontology via wrangler
 const db_name = await get_latest_database_name('Ontology')
-
+console.log(`latest db name: ${db_name}`)
 // get dump (https://developers.cloudflare.com/workers/wrangler/commands/#d1-export)
 // const dump_filename = `${db_name}.tabitha.sql`
 // await $`wrangler d1 export ${db_name} --output ${dump_filename} --remote`
