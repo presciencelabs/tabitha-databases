@@ -121,7 +121,7 @@ DB backups are handled via `wrangler` and stored in R2.
 
 #### Testing locally
 
-`cp db_backup/.env.example .env` and populate with a valid token
+`cp db_backup/.env.example .env` and populate with a valid tokens
 
 `bun run db_backup/index.ts`
 
