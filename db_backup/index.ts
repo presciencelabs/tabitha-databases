@@ -11,10 +11,8 @@ type DbInfo = {
 	[key: string]: string
 }
 
-await $`wrangler whoami --cwd db_backup`
-
 // get latest Ontology via wrangler
-// const db_name = await get_latest_database_name('Ontology')
+const db_name = await get_latest_database_name('Ontology')
 
 // get dump (https://developers.cloudflare.com/workers/wrangler/commands/#d1-export)
 // const dump_filename = `${db_name}.tabitha.sql`
@@ -30,7 +28,7 @@ await $`wrangler whoami --cwd db_backup`
 
 
 async function get_latest_database_name(name: string): Promise<string> {
-	const output = await $`${WRANGLER_CMD} d1 list`.text()
+	const output = await $`wrangler d1 list --cwd db_backup`.text()
 
 	const relevant_lines = output.split('\n').filter(line => line.startsWith('│'))
 	if (relevant_lines.length < 2) {
