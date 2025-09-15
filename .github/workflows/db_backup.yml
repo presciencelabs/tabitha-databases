@@ -14,8 +14,10 @@ jobs:
          -
             uses: oven-sh/setup-bun@v2
          -
-            run: cd db_backup && bun install
+            run: cd db_backup
          -
-            run: bun run
+            run: bun install
+         -
+            run: bun run backup
          # -
          #    run: bun db_backup/index.ts

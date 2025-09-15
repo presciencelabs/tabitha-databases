@@ -9,7 +9,7 @@ bun install
 To run:
 
 ```bash
-bun run
+bun run backup
 ```
 
 This project was created using `bun init` in bun v1.1.14. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.

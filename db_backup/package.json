@@ -3,11 +3,11 @@
 	"module": "index.ts",
 	"type": "module",
 	"scripts": {
-		"run": "bun index.ts"
+		"backup": "bun index.ts"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
-		"wrangler": "^4.36.0"
+		"wrangler": "^4.37.0"
 	},
 	"peerDependencies": {
 		"typescript": "^5.9.2"
