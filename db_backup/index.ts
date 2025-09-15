@@ -15,16 +15,16 @@ type DbInfo = {
 const db_name = await get_latest_database_name('Ontology')
 
 // get dump (https://developers.cloudflare.com/workers/wrangler/commands/#d1-export)
-const dump_filename = `${db_name}.tabitha.sql`
-await $`wrangler d1 export ${db_name} --output ${dump_filename} --remote`
+// const dump_filename = `${db_name}.tabitha.sql`
+// await $`wrangler d1 export ${db_name} --output ${dump_filename} --remote`
 
-// create db from dump (https://bun.com/docs/api/sqlite)
-console.log(`creating db from dump...`)
-const db_from_dump = await create_db(dump_filename)
+// // create db from dump (https://bun.com/docs/api/sqlite)
+// console.log(`creating db from dump...`)
+// const db_from_dump = await create_db(dump_filename)
 
-// upload db to R2 (https://bun.com/docs/api/s3)
-console.log(`uploading ${db_from_dump.filename} to R2...`)
-await $`wrangler r2 object put db-backups/${db_from_dump.filename} --file ${db_from_dump.filename} --remote`
+// // upload db to R2 (https://bun.com/docs/api/s3)
+// console.log(`uploading ${db_from_dump.filename} to R2...`)
+// await $`wrangler r2 object put db-backups/${db_from_dump.filename} --file ${db_from_dump.filename} --remote`
 
 
 async function get_latest_database_name(name: string): Promise<string> {

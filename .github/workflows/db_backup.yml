@@ -14,13 +14,8 @@ jobs:
          -
             uses: oven-sh/setup-bun@v2
          -
-            run: bun i wrangler
+            run: cd db_backup && bun install
          -
-            run: bun run wrangler --version
-         -
-            uses: cloudflare/wrangler-action@v3
-            with:
-              apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_DB_BACKUPS }}
-              workingDirectory: "db_backup"
+            run: bun run
          # -
          #    run: bun db_backup/index.ts
