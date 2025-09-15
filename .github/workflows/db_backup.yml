@@ -20,4 +20,4 @@ jobs:
          -
             run: bun run db_backup/index.ts
             env:
-               CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_DB_BACKUPS }}
+              CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_DB_BACKUPS }}
