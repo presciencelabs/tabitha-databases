@@ -117,25 +117,17 @@ This database should not need to be deployed on a regular basis.  Updates will e
 
 ### Database backups
 
-DB backups are handled via `wrangler` and stored in R2.  See README in `./db_backup` for local dev
+DB backups are handled via `wrangler` and stored in R2.
 
 #### Testing locally
 
-From within the `db_backup` dir:
+`cp db_backup/.env.example .env` and populate with a valid token
 
-##### First time tasks
-1. `pnpm i`
-1. `cp .env.example .env` and populate the secret values
-
-##### Normal dev
-
-`pnpm dev`
-
- Hit http://localhost:8787/cdn-cgi/handler/scheduled in a browser or separate terminal to run it.
+`bun run db_backup/index.ts`
 
 #### Deployment
 
-Commit and push, deployment will occur automatically
+Merging into `main` will automatically make the workflow available on its schedule.
 
 ## Local migrations
 
