@@ -49,8 +49,7 @@ async function get_latest_database_name(name: string): Promise<string> {
 
 	const filtered_databases = databases.filter(db => db.name.startsWith(name))
 	const sorted_descending = filtered_databases.sort((a, b) => b.created_at.localeCompare(a.created_at))
-	// const latest = sorted_descending[0]
-	const latest = sorted_descending[2] // TODO: remove after testing
+	const latest = sorted_descending[0] // ⚠️ when testing, might want to do [1] to avoid the prod db.
 
 	return latest.name
 }
@@ -59,7 +58,7 @@ async function create_db(sql_filename: string): Promise<Database> {
 	const db = new Database(sql_filename.replace('.sql', '.sqlite'))
 
 	const sql = await Bun.file(sql_filename).text()
-	const statements = sql.split(/;$/gm).filter(s => s.trim() !== '')
+	const statements = sql.split(/;$/gm).filter(s => s.trim() !== '') // "sql-stmt-list" https://www.sqlite.org/lang.html
 
 	console.log(`Running ${statements.length} statements in ${db.filename}`)
 

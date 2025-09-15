@@ -123,6 +123,8 @@ DB backups are handled via `wrangler` and stored in R2.
 
 `cp db_backup/.env.example .env` and populate with a valid tokens
 
+> ⚠️ exports will **BLOCK** the database so you might want to tweak the __get_latest_database_name()__ logic during testing to "find" a database that is not currently the production version.
+
 `bun run db_backup/index.ts`
 
 #### Deployment
