@@ -1,5 +1,6 @@
 name: Database backup
 
+# TODO: schedule workflow to run nightly?
 on:
    push:
       branches:
@@ -12,12 +13,11 @@ jobs:
          -
             uses: actions/checkout@v4
          -
+            # https://github.com/oven-sh/setup-bun
             uses: oven-sh/setup-bun@v2
-         -
-            run: cd db_backup
          -
             run: bun install
          -
-            run: bun run backup
-         # -
-         #    run: bun db_backup/index.ts
+            run: bun db_backup/index.ts
+            # env:
+            #    CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

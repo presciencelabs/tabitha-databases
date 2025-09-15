@@ -28,7 +28,7 @@ const db_name = await get_latest_database_name('Ontology')
 
 
 async function get_latest_database_name(name: string): Promise<string> {
-	const output = await $`wrangler d1 list`.text()
+	const output = await $`wrangler --cwd db_backup d1 list`.text()
 
 	const relevant_lines = output.split('\n').filter(line => line.startsWith('│'))
 	if (relevant_lines.length < 2) {
