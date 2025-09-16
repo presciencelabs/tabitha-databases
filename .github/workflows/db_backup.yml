@@ -1,4 +1,6 @@
 name: Database backup
+permissions:
+  contents: read
 
 on:
   schedule:
