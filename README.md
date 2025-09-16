@@ -115,13 +115,28 @@ From within the `complex_terms` dir:
 
 This database should not need to be deployed on a regular basis.  Updates will either be made directly to an already deployed database or via an app.
 
+### Database backups
+
+DB backups are handled via `wrangler` and stored in R2.
+
+#### Testing locally
+
+`cp db_backup/.env.example .env` and populate with a valid tokens
+
+> ⚠️ exports will **BLOCK** the database so you might want to tweak the __get_latest_database_name()__ logic during testing to "find" a database that is not currently the production version.
+
+`bun run db_backup/index.ts`
+
+#### Deployment
+
+Merging into `main` will automatically make the workflow available on its schedule.
+
 ## Local migrations
 
 > _order coupling_
 >
 > * Bible -> Sources -> Ontology
 > * Inflections -> English -> Targets
-
 
 ### Sources
 

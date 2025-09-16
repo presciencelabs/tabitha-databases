@@ -1,3 +1,4 @@
+.env
 .wrangler
 node_modules
 **/*.sqlite*
