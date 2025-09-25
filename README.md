@@ -53,7 +53,7 @@ https://developers.cloudflare.com/workers/wrangler
 > `--local` only operates on the local copy and is the default in wrangler v3.33.0+
 > `--remote` operates on the remote database
 
-`wrangler d1 execute <DB_NAME> --file=<DB_NAME>.tabitha.sqlite.sql`
+`wrangler d1 execute <DB_NAME> --file <DB_NAME>.tabitha.sqlite.sql`
 
 `wrangler d1 execute <DB_NAME> --command="select part_of_speech, count(*) as count from Concepts group by part_of_speech order by count; select * from Version;"`
 
@@ -82,7 +82,7 @@ From within the `complex_terms` dir:
 
 `wrangler dev --test-scheduled`
 
- Hit `curl 'http://localhost.tbta.bible:8787/__scheduled'` in a separate terminal to run it.
+ Hit `curl 'http://localhost.tabitha.bible:8787/__scheduled'` in a separate terminal to run it.
 
 #### Deployment
 

@@ -1,6 +1,7 @@
 .env
 .wrangler
 node_modules
+*.sql
 **/*.sqlite*
 !databases/*
 .DS_Store

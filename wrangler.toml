@@ -1,9 +1,19 @@
 # https://developers.cloudflare.com/workers/wrangler/configuration
 
 # https://developers.cloudflare.com/workers/configuration/compatibility-dates
-compatibility_date = "2024-10-24"
+compatibility_date = "2025-09-25"
 
 [[d1_databases]]
 binding = "DB_Ontology"
-database_name = "Ontology.9489.2024-10-24"
-database_id = "23ef1537-9183-49cd-85ce-935ea0c444bc"
+database_name = "Ontology.9493.2025-09-25"
+database_id = "9fe34c02-0d9c-487a-8898-c8412794b554"
+
+[[d1_databases]]
+binding = "DB_Sources"
+database_name = "Sources.2025-09-25"
+database_id = "e6aa6e22-7a9b-4d52-a28a-66f6708ea0b4"
+
+[[d1_databases]]
+binding = "DB_Targets"
+database_name = "Targets.2025-09-25"
+database_id = "cb7615fa-9872-44b0-9e0b-09a15e23bfd4"
