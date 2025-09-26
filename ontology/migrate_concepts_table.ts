@@ -67,7 +67,7 @@ function create_tabitha_table(tabitha_db: Database) {
 			stem					TEXT,
 			sense					TEXT,
 			part_of_speech		TEXT,
-			occurrences			TEXT,
+			occurrences			INTEGER,
 			gloss					TEXT,
 			brief_gloss			TEXT,
 			note					TEXT,
