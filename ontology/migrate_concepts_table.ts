@@ -8,6 +8,7 @@ type TransformedData = {
 	occurrences: number
 	gloss: string
 	brief_gloss: string
+	note: string
 	categorization: string
 	curated_examples: string
 	level: number
@@ -43,6 +44,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 						0							AS occurrences,
 						"LN Gloss"				AS gloss,
 						"Brief Gloss"			AS brief_gloss,
+						"LN Note"				AS note,
 						Categories				AS categorization,
 						Examples 				AS curated_examples,
 						Level						AS level
@@ -68,6 +70,7 @@ function create_tabitha_table(tabitha_db: Database) {
 			occurrences			TEXT,
 			gloss					TEXT,
 			brief_gloss			TEXT,
+			note					TEXT,
 			categorization		TEXT,
 			curated_examples	TEXT,
 			level					INTEGER
@@ -80,11 +83,11 @@ function create_tabitha_table(tabitha_db: Database) {
 function load_data(tabitha_db: Database, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Concepts table...`)
 
-	transformed_data.map(async ({id, stem, part_of_speech, occurrences, gloss, brief_gloss, categorization, curated_examples, level}) => {
+	transformed_data.map(async ({id, stem, part_of_speech, occurrences, gloss, brief_gloss, note, categorization, curated_examples, level}) => {
 		tabitha_db.run(`
-			INSERT INTO Concepts (id, stem, part_of_speech, occurrences, gloss, brief_gloss, categorization, curated_examples, level)
-			VALUES (?,?,?,?,?,?,?,?,?)
-		`, [id, stem, part_of_speech, occurrences, gloss, brief_gloss, categorization, curated_examples, level])
+			INSERT INTO Concepts (id, stem, part_of_speech, occurrences, gloss, brief_gloss, note, categorization, curated_examples, level)
+			VALUES (?,?,?,?,?,?,?,?,?,?)
+		`, [id, stem, part_of_speech, occurrences, gloss, brief_gloss, note, categorization, curated_examples, level])
 
 		await Bun.write(Bun.stdout, '.')
 	})
