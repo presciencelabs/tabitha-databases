@@ -236,7 +236,7 @@ function show_examples(db_ontology: Database) {
 	// most patient-like
 	show_examples({ stem: 'bury', sense: 'A', part_of_speech: 'Verb' }, { type: 'Bible', ref_id_primary: 8, ref_id_secondary: 1, ref_id_tertiary: 17 })
 	// agent proposition & predicate adjective
-	//TODO: need to add Grammar Introduction to Ref look up?  or simply find another example in the Bible? show_examples({ stem: 'be', sense: 'V', part_of_speech: 'Verb' }, { type: 'Grammar Introduction', ref_id_primary: 'Clauses', ref_id_secondary: 1, ref_id_tertiary: '67' })
+	show_examples({ stem: 'be', sense: 'V', part_of_speech: 'Verb' }, { type: 'Bible', ref_id_primary: 1, ref_id_secondary: 2, ref_id_tertiary: 18 })
 	// complex pairing
 	show_examples({ stem: 'cry', sense: 'A', part_of_speech: 'Verb' }, { type: 'Bible', ref_id_primary: 8, ref_id_secondary: 1, ref_id_tertiary: 14 })
 	show_examples({ stem: 'weep', sense: 'A', part_of_speech: 'Verb' }, { type: 'Bible', ref_id_primary: 8, ref_id_secondary: 1, ref_id_tertiary: 14 })
