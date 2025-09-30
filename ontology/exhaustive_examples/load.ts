@@ -87,7 +87,7 @@ function create_reference_lookup_table(db_ontology: Database) {
 	db_ontology.run(`
 		CREATE TABLE IF NOT EXISTS Reference_Primary_Lookup (
 			type	TEXT,
-			id		NUMBER,
+			id		INTEGER,
 			name	TEXT
 		)
 	`)
@@ -112,9 +112,9 @@ function create_or_clear_examples_table(db_ontology: Database) {
 			concept_sense				TEXT,
 			concept_part_of_speech	TEXT,
 			ref_type						TEXT,
-			ref_id_primary				NUMBER,
-			ref_id_secondary			NUMBER,
-			ref_id_tertiary			NUMBER,
+			ref_id_primary				INTEGER,
+			ref_id_secondary			INTEGER,
+			ref_id_tertiary			INTEGER,
 			context_json				TEXT
 		)
 	`)
