@@ -40,11 +40,9 @@ https://developers.cloudflare.com/workers/wrangler/commands/#d1
 
 https://developers.cloudflare.com/workers/wrangler
 
-`pnpx wrangler ...` will also work if you do not want to install wrangler
-
 ### Create database
 
-`wrangler d1 create <DB_NAME>`
+`bun wrangler d1 create <DB_NAME>`
 
 > This always creates the database remotely and locally, it is empty though.
 
@@ -53,24 +51,17 @@ https://developers.cloudflare.com/workers/wrangler
 > `--local` only operates on the local copy and is the default in wrangler v3.33.0+
 > `--remote` operates on the remote database
 
-`wrangler d1 execute <DB_NAME> --file <DB_NAME>.tabitha.sqlite.sql`
+`bun wrangler d1 execute <DB_NAME> --file <DB_NAME>.tabitha.sqlite.sql`
 
-`wrangler d1 execute <DB_NAME> --command="select part_of_speech, count(*) as count from Concepts group by part_of_speech order by count; select * from Version;"`
+`bun wrangler d1 execute <DB_NAME> --command="select part_of_speech, count(*) as count from Concepts group by part_of_speech order by count; select * from Version;"`
 
 ## Deployment
 
-Check each databases's approach below.
+`bun migrate <location of a zip containing TBTA dbs> YYYY-MM`
 
 ### Ontology
 
-#### When a new Ontology is available from TBTA
-
-> ⚠️ due to order coupling, this is not accurate anymore, everything must be done locally, see Local migrations below.
-
-1. The new database should be committed to the `databases` directory following appropriate naming convention.
-	> e.g., `Ontology.VERSION.YYYY-MM-DD.tbta.sqlite`
-1. Run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
-1. Update the Cloudflare `DB_Ontology` binding for the `sync_complex_terms` Worker.
+> ⚠️ Don't forget to update the `DB_Ontology` binding for the `sync_complex_terms` Worker when a new Ontology is created.
 
 ### Complex Terms
 
@@ -80,7 +71,7 @@ Complex terms will be updated from the "How to" spreadsheet to the database on a
 
 From within the `complex_terms` dir:
 
-`wrangler dev --test-scheduled`
+`bun wrangler dev --test-scheduled`
 
  Hit `curl 'http://localhost.tabitha.bible:8787/__scheduled'` in a separate terminal to run it.
 
@@ -91,25 +82,13 @@ From within the `complex_terms` dir:
 
 ### Sources
 
-#### When a new Bible, Community Development Text, and/or Grammar Introduction is available from TBTA
-
-> ⚠️ due to order coupling, this is not accurate anymore, everything must be done locally, see Local migrations below.
-
-1. Once in a sqlite format, it should be committed to the `databases` directory following appropriate naming convention.
-	> e.g., `Bible.YYYY-MM-DD.tbta.sqlite Community_Development_Texts.YYYY-MM-DD.tbta.sqlite Grammar_Introduction.YYYY-MM-DD.tbta.sqlite`
-1. Run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
+No special instructions required to generate or deploy.
 
 ### Targets
 
 #### When any new project is available from TBTA
 
-> ⚠️ due to order coupling, this is not accurate anymore, everything must be done locally, see Local migrations below.
-
-1. Ensure the inflections have already been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
-1. Once in a sqlite format, it should be committed to the `databases` directory following appropriate naming convention.
-	> Example naming convention: `English.YYYY-MM-DD.tbta.sqlite`
-1. Once the new sqlite db and the inflections are in place, they can be part of the same `commit` and pushed.
-1. Manually run the `deploy` worklow, i.e., `actions/workflows/deploy.yml`
+> ⚠️ Ensure the inflections have already been exported before attempting the migration using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
 
 ### Auth
 
