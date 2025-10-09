@@ -24,7 +24,7 @@ const db_from_dump = await create_db(dump_filename)
 
 // upload db to R2 (https://bun.com/docs/api/s3)
 console.log(`uploading ${db_from_dump.filename} to R2...`)
-await $`wrangler r2 object put db-backups/${db_from_dump.filename} --file ${db_from_dump.filename} --remote`
+await $`wrangler r2 object put db-backups/${db_from_dump.filename} --file ${db_from_dump.filename} --content-disposition 'attachment; filename="Ontology.sqlite.new"' --remote`
 
 
 async function get_latest_database_name(name: string): Promise<string> {
