@@ -2,13 +2,13 @@
   "name": "tabitha-databases",
   "type": "module",
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.6.3"
   },
   "dependencies": {
-    "bun": "^1.2.22",
-    "wrangler": "^4.40.1"
+    "bun": "^1.2.23",
+    "wrangler": "^4.42.2"
   },
   "devDependencies": {
-    "@types/bun": "^1.2.22"
+    "@types/bun": "^1.2.23"
   }
 }
