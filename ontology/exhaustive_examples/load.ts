@@ -2,9 +2,9 @@ import Database from 'bun:sqlite'
 import { find_word_context } from './example_context'
 import { transform_semantic_encoding } from './semantic_encoding'
 
-export async function load_examples(db_ontology: Database, db_sources: Database) {
+export async function load_examples(db_ontology: Database, db_sources: Database, db_sources_complex: Database) {
 	create_or_clear_examples_table(db_ontology)
-	await find_exhaustive_occurrences(db_sources, db_ontology)
+	await find_exhaustive_occurrences(db_ontology, db_sources, db_sources_complex)
 	update_occurrences(db_ontology)
 
 	show_examples(db_ontology)
@@ -33,7 +33,13 @@ function create_or_clear_examples_table(db_ontology: Database) {
 	console.log('done.')
 }
 
-async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Database) {
+/**
+ * 
+ * @param db_ontology The Tabitha ontology database
+ * @param db_sources The Tabitha sources database
+ * @param db_sources_complex The Tabitha sources database after Complex Concept Insertion rules have been applied
+ */
+async function find_exhaustive_occurrences(db_ontology: Database, db_sources: Database, db_sources_complex: Database) {
 	console.log('Fetching all source encoding...')
 	type Source = {
 		type: string
@@ -45,8 +51,18 @@ async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Da
 	const all_sources = db_sources.query<Source, []>(`
 		SELECT type, id_primary, id_secondary, id_tertiary, semantic_encoding
 		FROM Sources
+		WHERE semantic_encoding <> ''
 	`).all()
 	console.log(`Fetched ${all_sources.length} verses`)
+
+	// For tracking how complex concepts are handled, we need to know which concepts are complex
+	const all_complex_concepts = db_ontology.query<Concept, []>(`
+		SELECT stem, sense, part_of_speech
+		FROM Concepts
+		WHERE level = 2 OR level = 3
+	`).all()
+	const complex_concept_set = new Set(all_complex_concepts.map(c => `${c.stem}|${c.sense}|${c.part_of_speech}`))
+	console.log(`Found ${complex_concept_set.size} complex concepts`)
 
 	let current_reference: Reference = { type: '', id_primary: '', id_secondary: '', id_tertiary: '' }
 	for (const { semantic_encoding, type, id_primary, id_secondary, id_tertiary } of all_sources) {
@@ -63,43 +79,70 @@ async function find_exhaustive_occurrences(db_sources: Database, db_ontology: Da
 		current_reference = { type, id_primary, id_secondary, id_tertiary }
 
 		// For each word encountered, add the current verse reference to that word's examples
-		transform_semantic_encoding(semantic_encoding)
-			.map<[SourceEntity, ContextArguments|null]>((entity, index, source_entities) => entity.concept ? [entity, find_word_context(index, source_entities)] : [entity, null])
-			.forEach(([entity, context]) => {
-				if (!context || !entity.concept) {
-					return
-				}
-				
-				if (entity.pairing) {
-					// A pairing will have the same context as the main concept.
-					// Add a context argument to indicate the word each half is paired with.
-					record_occurrence(db_ontology, entity.concept, current_reference, {
-						...context,
-						'Pairing': `${entity.pairing.stem}-${entity.pairing.sense}`,
-					})
-					record_occurrence(db_ontology, entity.pairing, current_reference, {
-						...context,
-						'Pairing': `${entity.concept.stem}-${entity.concept.sense}`,
-					})
-				} else {
-					record_occurrence(db_ontology, entity.concept, current_reference, context)
-				}
-			})
+		const base_contexts = transform_semantic_encoding(semantic_encoding, complex_concept_set)
+			.flatMap((_, index, source_entities) => find_word_context(index, source_entities))
+		record_occurrences(db_ontology, current_reference, base_contexts)
 
-		await Bun.write(Bun.stdout, '.')
+		// Find the occurrences of complex concepts that were explicated. db_sources_complex contains the verses after
+		// the Complex Concept Insertion rules have been applied. Pairings have also been reduced to just the complex word.
+		const complex_verse = db_sources_complex.query<{ semantic_encoding: string }, string[]>(`
+			SELECT semantic_encoding
+			FROM Sources
+			WHERE type = ? AND id_primary = ? AND id_secondary LIKE ? AND id_tertiary LIKE ?
+		`).get(type, id_primary, id_secondary, id_tertiary)
+		if (complex_verse) {
+			function normalize_complex_contexts_for_comparison(contexts: [Concept, ContextArguments][]): [Concept, string][] {
+				return contexts
+					.filter(([concept]) => concept.is_complex)
+					.map(([concept, context]) => [
+						concept,
+						JSON.stringify(context)
+							// remove the Pairing and Complex Handling values for comparison purposes
+							.replaceAll(/,\s*"(Pairing|Complex Handling)":\s*".*?"/g, '')
+							// remove the simple word of any pairing found so we're only comparing the complex word
+							.replaceAll(/"[^"]*?[/\\]/g, '"'),
+					])
+			}
+
+			const complex_contexts = transform_semantic_encoding(complex_verse.semantic_encoding, complex_concept_set)
+				.flatMap((entity, index, source_entities) => entity.concept?.is_complex ? find_word_context(index, source_entities) : [])
+			const normalized_complex_contexts = normalize_complex_contexts_for_comparison(complex_contexts)
+			const normalized_base_contexts = normalize_complex_contexts_for_comparison(base_contexts)
+			
+			// This isn't a perfect solution because there may be multiple occurrences with the same context, and it (rarely) may also falsely identify an unmatched context.
+			const unmatched_complex = normalized_complex_contexts.filter(([c, json]) => !normalized_base_contexts.some(([bc, bjson]) => c.stem === bc.stem && c.sense === bc.sense && c.part_of_speech === bc.part_of_speech && json === bjson))
+
+			const explicated_contexts = unmatched_complex.map(([concept, context]) => [concept, { ...JSON.parse(context), 'Complex Handling': 'Explication' }] as [Concept, ContextArguments])
+			if (explicated_contexts.length > 0) {
+				record_occurrences(db_ontology, current_reference, explicated_contexts)
+			}
+		}
+
+		const progress_char = id_tertiary.endsWith('0') ? '_' : '.'	// easier to count the verses this way
+		await Bun.write(Bun.stdout, progress_char)
 	}
 
 	console.log()
 	console.log('done!')
 }
 
+function record_occurrences(db_ontology: Database, reference: Reference, contexts: [Concept, ContextArguments][]) {
+	// doing the insertions in a transaction is much faster
+	db_ontology.transaction(() => {
+		for (const [concept, context] of contexts) {
+			record_occurrence(db_ontology, concept, reference, context)
+		}
+	})()
+}
+
 function record_occurrence(db_ontology: Database, concept: Concept, reference: Reference, context: ContextArguments) {
 	const { stem, sense, part_of_speech } = concept
 	const { type, id_primary, id_secondary, id_tertiary } = reference
-	db_ontology.run(`
+	// using query() caches the statement, making this faster for bulk inserts
+	db_ontology.query(`
 		INSERT INTO Exhaustive_Examples (concept_stem, concept_sense, concept_part_of_speech, ref_type, ref_id_primary, ref_id_secondary, ref_id_tertiary, context_json)
 		VALUES (?,?,?,?,?,?,?,?)
-	`, [stem, sense, part_of_speech, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context)])
+	`).run(stem, sense, part_of_speech, type, id_primary, id_secondary, id_tertiary, JSON.stringify(context))
 }
 
 async function update_occurrences(db_ontology: Database) {
