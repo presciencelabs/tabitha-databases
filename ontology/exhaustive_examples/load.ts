@@ -218,15 +218,6 @@ async function find_exhaustive_occurrences(db_ontology: Database, db_sources: Da
 	console.log('done!')
 }
 
-function record_occurrences(db_ontology: Database, reference: Reference, contexts: [Concept, ContextArguments][]) {
-	// doing the insertions in a transaction is much faster
-	db_ontology.transaction(() => {
-		for (const [concept, context] of contexts) {
-			record_occurrence(db_ontology, concept, reference, context)
-		}
-	})()
-}
-
 function record_occurrences(db_ontology: Database, reference: SourceReference, contexts: [Concept, ContextArguments][]) {
 	// doing the insertions in a transaction is much faster
 	db_ontology.transaction(() => {
