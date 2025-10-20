@@ -1,0 +1,21 @@
+{
+   "$schema": "node_modules/wrangler/config-schema.json",
+   "compatibility_date": "2025-09-25",
+   "d1_databases": [
+      {
+         "binding": "DB_Ontology",
+         "database_name": "Ontology.2025-10-08",
+         "database_id": "e8fafe65-dcc2-4815-8784-9e778131bb7f"
+      },
+      {
+         "binding": "DB_Sources",
+         "database_name": "Sources.2025-10-08",
+         "database_id": "803d727a-9a83-4136-89e9-4663cf9616f9"
+      },
+      {
+         "binding": "DB_Targets",
+         "database_name": "Targets.2025-10-08",
+         "database_id": "5601cb27-b9bb-4e4b-a786-4cea0efaf8a1"
+      }
+   ]
+}

@@ -7,12 +7,19 @@ type SourceEntity = {
 	pairing: Concept|null
 }
 
-type Reference = {
+type SourceReference = {
 	type: string
 	id_primary: string
 	id_secondary: string
 	id_tertiary: string
 }
+type ExampleReference = {
+	type: string
+	ref_id_primary: number
+	ref_id_secondary: number
+	ref_id_tertiary: number
+}
+
 
 type ContextArguments = Record<string, string>
 
