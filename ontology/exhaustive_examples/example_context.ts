@@ -225,6 +225,10 @@ function find_containing_phrase(index: number, source_entities: SourceEntity[]):
 }
 
 function find_containing_clause(index: number, source_entities: SourceEntity[]): number {
+	if (is_opening_main_clause(source_entities[index])) {
+		// an opening main clause is never contained within any other clause
+		return -1
+	}
 	return find_entity_before(is_opening_any_clause, { skip_clauses: true })(index, source_entities)
 }
 
@@ -352,6 +356,10 @@ function find_arguments(argument_infos: ArgumentInfo[]): ContextArgumentFinder {
 
 function is_phrase(entity: SourceEntity, label: string) {
 	return entity.label === label
+}
+
+function is_opening_main_clause(entity: SourceEntity) {
+	return entity.value === '{'
 }
 
 function is_opening_sub_clause(entity: SourceEntity) {
