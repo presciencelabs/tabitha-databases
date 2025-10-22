@@ -68,14 +68,15 @@ for (const cfg of configs) {
 	await $`sqlite3 ${dest_file} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${dest_file}.sql`
 
 	console.log(`Creating new D1 database for ${cfg.key}...`)
-	const cmd_output_new_db = await $`bun wrangler d1 create ${cfg.key}.${date}`.text()
+	const d1_db_name = dest_file.match(/([^/]+)\.tabitha\.sqlite$/)?.[1] // => Sources.2025-10-22 or Ontology.9493.2025-10-22
+	const cmd_output_new_db = await $`bun wrangler d1 create ${d1_db_name}`.text()
 
 	console.log(`Updating wrangler.jsonc with new ${cfg.key} database info...`)
 	const new_db_info = extract_new_db_info(cmd_output_new_db)
 	await update_deployment_config(new_db_info, `DB_${cfg.key}`)
 
 	console.log(`Deploying new ${cfg.key} data to D1...`)
-	await $`bun wrangler d1 execute ${cfg.key}.${date} --file ${dest_file}.sql --remote`.quiet()
+	await $`bun wrangler d1 execute ${d1_db_name} --file ${dest_file}.sql --remote`.quiet()
 }
 
 async function stage_tbta_files(working_dir: string) {
