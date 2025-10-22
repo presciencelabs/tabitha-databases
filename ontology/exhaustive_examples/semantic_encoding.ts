@@ -92,6 +92,22 @@ export const FEATURES = {
 				'P': 'Most Patient-Like',
 			},
 		},
+		VOCABULARY_ALTERNATE: {
+			index: 16,
+			values: {
+				// For our purposes here, we only care about whether it's a complex alternate or not.
+				// The different values technically indicate 'single/first/last/coordinate' sentence of each type.
+				'N': 'Not Applicable',
+				'V': 'Complex Alternate',
+				'F': 'Complex Alternate',
+				'L': 'Complex Alternate',
+				'C': 'Complex Alternate',
+				's': 'Simple Alternate',
+				'f': 'Simple Alternate',
+				'l': 'Simple Alternate',
+				'c': 'Simple Alternate',
+			},
+		},
 	},
 }
 
@@ -133,7 +149,7 @@ const WORD_ENTITY_TYPES = new Set(['N', 'V', 'A', 'a', 'P', 'C', 'r', 'p'])
  * ~\wd ~\tg ~\lu )             => { type: '', label: '', features: '', value: ')' }
  * ~\wd ~\tg .-~\lu .           => { type: '.', label: 'period', features: '', value: '.' }
  */
-export function transform_semantic_encoding(semantic_encoding: string): SourceEntity[] {
+export function transform_semantic_encoding(semantic_encoding: string, complex_concepts: Set<string>): SourceEntity[] {
 	const EXTRACT_TYPE_FEATURES_VALUES = /~\\wd ~\\tg (?:([\w.])-([^~]*))?~\\lu ([^~]+)/g
 	const entities = [...semantic_encoding.matchAll(EXTRACT_TYPE_FEATURES_VALUES)]
 
@@ -149,12 +165,14 @@ export function transform_semantic_encoding(semantic_encoding: string): SourceEn
 		let pairing: Concept|null = null
 
 		if (WORD_ENTITY_TYPES.has(type)) {
-			const pairing_split = value.split('/')
+			const pairing_split = value.split(/[/\\]/)
 			concept = {
 				stem: pairing_split[0],
 				sense: features[1],
 				part_of_speech: label,
 			}
+			concept.is_complex = complex_concepts.has(`${concept.stem}|${concept.sense}|${concept.part_of_speech}`)
+
 			if (pairing_split.length > 1) {
 				// has a pairing; e.g., "follower/Adisciple"
 				// the first letter of the pairing is always the sense
@@ -163,6 +181,7 @@ export function transform_semantic_encoding(semantic_encoding: string): SourceEn
 					sense: pairing_split[1][0],
 					part_of_speech: label,
 				}
+				pairing.is_complex = complex_concepts.has(`${pairing.stem}|${pairing.sense}|${pairing.part_of_speech}`)
 			}
 		}
 

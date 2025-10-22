@@ -8,9 +8,40 @@ const context_argument_finder: FinderLookup = {
 	Adposition: find_adposition_context,
 }
 
-export function find_word_context(entity_index: number, source_entities: SourceEntity[]): ContextArguments {
+export function find_word_context(entity_index: number, source_entities: SourceEntity[]): [Concept, ContextArguments][] {
 	const entity = source_entities[entity_index]
-	return context_argument_finder[entity.label]?.(entity_index, source_entities) ?? {}
+	if (!entity.concept) {
+		return []
+	}
+
+	const context_args = context_argument_finder[entity.label]?.(entity_index, source_entities) ?? {}
+	if (entity.pairing) {
+		// A pairing will have the same context as the main concept.
+		// Add a context argument to indicate the word each half is paired with.
+		return [
+			[entity.concept, {
+				...context_args,
+				'Pairing': `${entity.pairing.stem}-${entity.pairing.sense}`,
+				// a complex word here is a mistake, but we should still document it if it occurs
+				...(entity.concept.is_complex ? { 'Complex Handling': 'None' } : {}),
+			}],
+			[entity.pairing, {
+				...context_args,
+				'Pairing': `${entity.concept.stem}-${entity.concept.sense}`,
+				// not all pairings are complex pairings (eg. dynamic\literal and metric/biblical units)
+				...(entity.pairing.is_complex ? { 'Complex Handling': 'Pairing' } : {}),
+			}],
+		]
+
+	} else if (entity.concept?.is_complex) {
+		return [[entity.concept, {
+			...context_args,
+			'Complex Handling': is_in_complex_alternate(entity_index, source_entities) ? 'Complex Alternate' : 'None',
+		}]]
+
+	} else {
+		return [[entity.concept, context_args]]
+	}
 }
 
 function find_noun_context(entity_index: number, source_entities: SourceEntity[]): ContextArguments {
@@ -59,6 +90,9 @@ function find_verb_context(entity_index: number, source_entities: SourceEntity[]
 	])
 
 	const clause_index = find_containing_clause(entity_index, source_entities)
+	if (clause_index === -1) {
+		throw new Error('Invalid semantic encoding - no containing clause')
+	}
 
 	return {
 		'Topic NP': get_feature_value(source_entities[clause_index], FEATURES.CLAUSE.TOPIC_NP),
@@ -133,6 +167,20 @@ function find_adposition_context(entity_index: number, source_entities: SourceEn
 	}
 }
 
+function is_in_complex_alternate(entity_index: number, source_entities: SourceEntity[]): boolean {
+	// check if the concept is in a complex alternate
+	let containing_clause = entity_index
+	while (true) {
+		containing_clause = find_containing_clause(containing_clause, source_entities)
+		if (containing_clause === -1) {
+			return false
+		}
+		if (has_feature(source_entities[containing_clause], FEATURES.CLAUSE.VOCABULARY_ALTERNATE, 'Complex Alternate')) {
+			return true
+		}
+	}
+}
+
 function get_outer_context(phrase_index: number, source_entities: SourceEntity[], outer_label: string): ContextArguments {
 	const outer_phrase_index = find_containing_phrase(phrase_index, source_entities)
 
@@ -157,6 +205,11 @@ function format_concept(entity: SourceEntity) {
 	if (!entity.concept) {
 		return entity.value
 	}
+	// We should maintain the whole pairing as a context argument, as this better tracks how words are used.
+	if (entity.pairing) {
+		const divider = entity.pairing.is_complex ? '/' : '\\'
+		return `${entity.concept.stem}-${entity.concept.sense}${divider}${entity.pairing.stem}-${entity.pairing.sense}`
+	}
 	return `${entity.concept.stem}-${entity.concept.sense}`
 }
 
@@ -172,13 +225,11 @@ function find_containing_phrase(index: number, source_entities: SourceEntity[]):
 }
 
 function find_containing_clause(index: number, source_entities: SourceEntity[]): number {
-	const clause_index = find_entity_before(is_opening_any_clause, { skip_clauses: true })(index, source_entities)
-
-	if (clause_index === -1) {
-		throw new Error('Invalid semantic encoding - no containing clause')
+	if (is_opening_main_clause(source_entities[index])) {
+		// an opening main clause is never contained within any other clause
+		return -1
 	}
-
-	return clause_index
+	return find_entity_before(is_opening_any_clause, { skip_clauses: true })(index, source_entities)
 }
 
 /**
@@ -305,6 +356,10 @@ function find_arguments(argument_infos: ArgumentInfo[]): ContextArgumentFinder {
 
 function is_phrase(entity: SourceEntity, label: string) {
 	return entity.label === label
+}
+
+function is_opening_main_clause(entity: SourceEntity) {
+	return entity.value === '{'
 }
 
 function is_opening_sub_clause(entity: SourceEntity) {

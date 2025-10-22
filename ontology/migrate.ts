@@ -24,7 +24,8 @@ await migrate_complex_terms_table(tabitha_db)
 
 const sources_db_name = Bun.argv[3]	// databases/Sources.YYYY-MM-DD.tabitha.sqlite
 const sources_db = new Database(sources_db_name)
-await load_examples(tabitha_db, sources_db)
+const sources_db_complex = new Database(sources_db_name.replace('Sources', 'Sources.Complex'))
+await load_examples(tabitha_db, sources_db, sources_db_complex)
 
 console.log(`Optimizing ${tabitha_db_name}...`)
 tabitha_db.run(`VACUUM`)
