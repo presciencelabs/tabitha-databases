@@ -153,7 +153,7 @@ async function find_exhaustive_occurrences(db_ontology: Database, db_sources: Da
 		FROM Concepts
 		WHERE level = 2 OR level = 3
 	`).all()
-	const complex_concept_set = new Set(all_complex_concepts.map(c => `${c.stem}|${c.sense}|${c.part_of_speech}`))
+	const complex_concept_set = new Set(all_complex_concepts.map(concept_key))
 	console.log(`Found ${complex_concept_set.size} complex concepts`)
 
 	let current_reference: SourceReference = { type: '', id_primary: '', id_secondary: '', id_tertiary: '' }
@@ -200,11 +200,41 @@ async function find_exhaustive_occurrences(db_ontology: Database, db_sources: Da
 				.flatMap((entity, index, source_entities) => entity.concept?.is_complex ? find_word_context(index, source_entities) : [])
 			const normalized_complex_contexts = normalize_complex_contexts_for_comparison(complex_contexts)
 			const normalized_base_contexts = normalize_complex_contexts_for_comparison(base_contexts)
-			
-			// This isn't a perfect solution because there may be multiple occurrences with the same context, and it (rarely) may also falsely identify an unmatched context.
-			const unmatched_complex = normalized_complex_contexts.filter(([c, json]) => !normalized_base_contexts.some(([bc, bjson]) => c.stem === bc.stem && c.sense === bc.sense && c.part_of_speech === bc.part_of_speech && json === bjson))
 
-			const explicated_contexts = unmatched_complex.map(([concept, context]) => [concept, { ...JSON.parse(context), 'Complex Handling': 'Explication' }] as [Concept, ContextArguments])
+			// This isn't a perfect solution because there may be multiple occurrences with the same context, and it (rarely) may also falsely identify an unmatched context.
+			function contexts_equal([c1, json1]: [Concept, string], [c2, json2]: [Concept, string]): boolean {
+				return c1.stem === c2.stem && c1.sense === c2.sense && c1.part_of_speech === c2.part_of_speech && json1 === json2
+			}
+			const unmatched_complex = normalized_complex_contexts.filter(complex_entry => !normalized_base_contexts.some(base_entry => contexts_equal(complex_entry, base_entry)))
+			const unmatched_base = normalized_base_contexts.filter(base_entry => !normalized_complex_contexts.some(complex_entry => contexts_equal(complex_entry, base_entry)))
+			
+			// Check for any redundant occurrences due to other explicated concepts.
+			// eg. 'God blessed the seventh day' -> 'God blessed the Sabbath'
+			// 	Here 'Sabbath' was explicated, causing the context for 'bless' to differ from the base context.
+			// 	We only want to record the base occurrence for 'bless'.
+			// 	Each occurrence of 'Sabbath' will still be recorded.
+			const grouped_unmatched_complex = Map.groupBy(unmatched_complex, ([concept]) => concept_key(concept))
+			const grouped_unmatched_base = Map.groupBy(unmatched_base, ([concept]) => concept_key(concept))
+			function context_is_unique([concept, context]: [Concept, string]): boolean {
+				const key = concept_key(concept)
+				const unmatched_complex_for_concept = grouped_unmatched_complex.get(key) || []
+				const unmatched_base_for_concept = grouped_unmatched_base.get(key) || []
+
+				// If there are different number of unmatched contexts in the base and complex versions for this concept,
+				// 	then it is likely the complex occurrences are not redundant
+				if (unmatched_complex_for_concept.length !== unmatched_base_for_concept.length) {
+					return true
+				}
+				// If any of the other explicated concepts are present in this context, then this occurrence is likely redundant
+				const other_unmatched_complex_concepts = [...grouped_unmatched_complex.keys()].filter(k => k !== key)
+					.map(k => k.split('|')).map(([stem, sense]) => `${stem}-${sense}`)
+				return !other_unmatched_complex_concepts.some(c => context.includes(`"${c}"`))
+				// There may still be a rare case where a redundant occurrence is recorded, but this will catch most cases.
+			}
+
+			const explicated_contexts = unmatched_complex.filter(context_is_unique)
+				.map(([concept, context]) => [concept, { ...JSON.parse(context), 'Complex Handling': 'Explication' }] as [Concept, ContextArguments])
+
 			if (explicated_contexts.length > 0) {
 				record_occurrences(db_ontology, current_reference, explicated_contexts)
 			}
@@ -216,6 +246,10 @@ async function find_exhaustive_occurrences(db_ontology: Database, db_sources: Da
 
 	console.log()
 	console.log('done!')
+}
+
+function concept_key(concept: Concept): string {
+	return `${concept.stem}|${concept.sense}|${concept.part_of_speech}`
 }
 
 function record_occurrences(db_ontology: Database, reference: SourceReference, contexts: [Concept, ContextArguments][]) {
