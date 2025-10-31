@@ -4,13 +4,13 @@
    "d1_databases": [
       {
          "binding": "DB_Ontology",
-         "database_name": "Ontology.9493.2025-10-22",
-         "database_id": "32bbffbf-3384-4a88-9c1c-ad633cd3df8b"
+         "database_name": "Ontology.9493.2025-10-31",
+         "database_id": "6bd7e950-2a61-4e7a-be6a-ac50c93315a2"
       },
       {
          "binding": "DB_Sources",
-         "database_name": "Sources.2025-10-22",
-         "database_id": "59513ad3-d62a-4731-a0a2-493f77cf80c5"
+         "database_name": "Sources.2025-10-31",
+         "database_id": "c3b4f15a-ee4f-4ab9-bc7a-ac06edae1e68"
       },
       {
          "binding": "DB_Targets",
