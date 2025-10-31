@@ -71,9 +71,7 @@ Complex terms will be updated from the "How to" spreadsheet to the database on a
 
 #### Testing locally
 
-From within the `complex_terms` dir:
-
-`bun wrangler dev --test-scheduled`
+`bun wrangler --config complex_terms/wrangler.toml dev --test-scheduled`
 
  Hit `curl 'http://localhost.tabitha.bible:8787/__scheduled'` in a separate terminal to run it.
 
@@ -81,6 +79,8 @@ From within the `complex_terms` dir:
 
 1. Ensure the correct database binding is set in `wrangler.toml`
 1. Commit and push, deployment will occur automatically
+
+> ℹ️ `bun wrangler --config complex_terms/wrangler.toml deploy`
 
 ### Sources
 
