@@ -3,7 +3,7 @@
 
 # https://developers.cloudflare.com/workers/wrangler/configuration/#inheritable-keys
 name = "sync_complex_terms"
-main = "index.js"
+main = "./index.js"
 compatibility_date = "2025-10-31"
 workers_dev = false
 
