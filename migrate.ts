@@ -1,5 +1,6 @@
-import { $ } from 'bun'
+import { $, Glob } from 'bun'
 import Database from 'bun:sqlite'
+import { rename } from 'fs/promises'
 import wrangler_cfg from './wrangler.jsonc'
 
 if (!Bun.which('sqlite3')) {
@@ -81,6 +82,10 @@ for (const cfg of configs) {
 
 async function stage_tbta_files(working_dir: string) {
 	await $`mkdir -p ${working_dir} && unzip -o ${zip} -d ${working_dir}`
+
+	for await (const file of new Glob('*.new').scan(working_dir)) {
+		await rename(`${working_dir}/${file}`, `${working_dir}/${file.replace('.new', '.sqlite')}`)
+	}
 
 	const unzipped_db_names = await $`ls ${working_dir}/*.sqlite`.text()
 

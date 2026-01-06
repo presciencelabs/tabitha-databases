@@ -4,18 +4,18 @@
    "d1_databases": [
       {
          "binding": "DB_Ontology",
-         "database_name": "Ontology.9493.2025-10-31",
-         "database_id": "6bd7e950-2a61-4e7a-be6a-ac50c93315a2"
+         "database_name": "Ontology.9494.2025-12-18",
+         "database_id": "441ed35c-dbb6-4dd0-860c-aefe18be3fc8"
       },
       {
          "binding": "DB_Sources",
-         "database_name": "Sources.2025-10-31",
-         "database_id": "c3b4f15a-ee4f-4ab9-bc7a-ac06edae1e68"
+         "database_name": "Sources.2025-12-18",
+         "database_id": "1c094c81-ca66-45f4-af84-7e8fd1a4b9da"
       },
       {
          "binding": "DB_Targets",
-         "database_name": "Targets.2025-10-22",
-         "database_id": "ef1ef635-54ea-4534-9546-ba3d79821f90"
+         "database_name": "Targets.2025-12-18",
+         "database_id": "f5cc9899-9dfb-4d4f-8ba7-e92b5ea86897"
       }
    ]
 }
