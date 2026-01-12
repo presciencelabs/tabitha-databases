@@ -2,6 +2,7 @@ import { $ } from 'bun'
 import Database from 'bun:sqlite'
 import { migrate_form_names_table } from './migrate_form_names_table'
 import { migrate_lexical_features_table } from './migrate_lexical_features_table'
+import { migrate_source_features_table } from './migrate_source_features_table'
 import { migrate_lexical_forms } from './migrate_lexical_forms'
 import { migrate_lexicon_table } from './migrate_lexicon_table'
 import { migrate_text_table } from './migrate_text_table'
@@ -22,6 +23,7 @@ migrate_text_table(tbta_db, project, targets_db)
 migrate_lexicon_table(tbta_db, project, targets_db)
 await migrate_lexical_forms(project, targets_db, './targets/inflections/csv')
 migrate_form_names_table(tbta_db, project, targets_db)
+migrate_source_features_table(tbta_db, project, targets_db)
 migrate_lexical_features_table(tbta_db, project, targets_db)
 
 console.log(`Optimizing ${targets_db_name}...`)

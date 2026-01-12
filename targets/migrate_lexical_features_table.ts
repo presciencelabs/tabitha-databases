@@ -9,7 +9,7 @@ export function migrate_lexical_features_table(tbta_db: Database, project: strin
 }
 
 type TransformedData = {
-	part_of_speech: string
+	category: string
 	feature: string
 	position: number
 	code: string
@@ -24,7 +24,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	return transformed_data
 
 	type DbRow = {
-		part_of_speech: string
+		category: string
 		feature: string
 		encoded_values: string
 		notes: string
@@ -33,7 +33,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 		console.log(`Extracting features from ${tbta_db.filename}...`)
 
 		const sql = `
-		  SELECT	SyntacticName as part_of_speech,
+		  SELECT	SyntacticName as category,
 					FeatureName as feature,
 					FeatureValues as encoded_values,
 					Comment as notes
@@ -57,8 +57,8 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	/**
 	* Transforming data from tbta that looks like this:
 	*
-	* | part_of_speech	| feature						| encoded_values																						|
-	* | --------------- | ------------------------ | ------------------------------------------------------------------------------ |
+	* | category		| feature						| encoded_values																						|
+	* | ------------- | ------------------------ | ------------------------------------------------------------------------------ |
 	* | Noun				| Common/Proper				| "Common/C|Proper/P|"																				|
 	* | Noun				| Gender							| "Neuter/N|Masculine/M|Feminine/F|"															|
 	* | Noun				| Type of Relative Clause	| "Standard/S|Locative - Relativizer is where/L|Temporal - Relativizer is when/T"|
@@ -67,8 +67,8 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	*
 	* into data that looks like this for tabitha:
 	*
-	* | part_of_speech	| feature						| position	| code	| value										|
-	* | --------------- | ------------------------ | --------- | ------ | --------------------------------- |
+	* | category		| feature						| position	| code	| value										|
+	* | ------------- | ------------------------ | --------- | ------ | --------------------------------- |
 	* | Noun				| Common/Proper				| 1			| C		| Common										|
 	* | Noun				| Common/Proper				| 1			| P		| Proper										|
 	* | Noun				| Gender							| 2			| N		| Neuter										|
@@ -89,15 +89,15 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 		type PartOfSpeech = string
 		type Features = Set<string>
 		const position_tracker: Map<PartOfSpeech, Features> = new Map()
-		for (const { part_of_speech, feature, encoded_values, notes } of extracted_data) {
-			const features = position_tracker.get(part_of_speech) ?? new Set()
-			position_tracker.set(part_of_speech, features.add(feature))
-			const position = position_tracker.get(part_of_speech)?.size ?? 0
+		for (const { category, feature, encoded_values, notes } of extracted_data) {
+			const features = position_tracker.get(category) ?? new Set()
+			position_tracker.set(category, features.add(feature))
+			const position = position_tracker.get(category)?.size ?? 0
 
 			for (const encoded_value of encoded_values.split('|').filter(entry => entry !== '')) {
 				const [value, code] = encoded_value.split('/')
 
-				transformed_data.push({ part_of_speech, feature, position, code, value, notes })
+				transformed_data.push({ category, feature, position, code, value, notes })
 			}
 		}
 
@@ -113,7 +113,7 @@ function create_tabitha_table(targets_db: Database) {
 	targets_db.run(`
 		CREATE TABLE IF NOT EXISTS Lexical_Features (
 			project			TEXT,
-			part_of_speech	TEXT,
+			category			TEXT,
 			feature			TEXT,
 			position			INTEGER,
 			code				TEXT,
@@ -130,11 +130,11 @@ function create_tabitha_table(targets_db: Database) {
 function load_data(targets_db: Database, project: string, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Lexical_Features table...`)
 
-	transformed_data.map(async ({part_of_speech, feature, position, code, value, notes}) => {
+	transformed_data.map(async ({category, feature, position, code, value, notes}) => {
 		targets_db.run(`
-			INSERT INTO Lexical_Features (project, part_of_speech, feature, position, code, value, notes)
+			INSERT INTO Lexical_Features (project, category, feature, position, code, value, notes)
 			VALUES (?, ?, ?, ?, ?, ?, ?)
-		`, [project, part_of_speech, feature, position, code, value, notes])
+		`, [project, category, feature, position, code, value, notes])
 
 		await Bun.write(Bun.stdout, '.')
 	})
