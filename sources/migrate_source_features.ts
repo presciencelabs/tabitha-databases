@@ -8,20 +8,20 @@ export function migrate_source_features(tbta_db: Database, sources_db: Database)
 	load_data(sources_db, transformed_data)
 }
 
-const CATEGORIES: Record<string, string> = {
-	'1': 'Noun',
-	'2': 'Verb',
-	'3': 'Adjective',
-	'4': 'Adverb',
-	'5': 'Adposition',
-	'6': 'Conjunction',
-	'7': 'Phrasal',
-	'8': 'Particle',
-	'101': 'Noun Phrase',
-	'102': 'Verb Phrase',
-	'103': 'Adjective Phrase',
-	'104': 'Adverb Phrase',
-	'105': 'Clause',
+const CATEGORIES: Record<number, string> = {
+	1: 'Noun',
+	2: 'Verb',
+	3: 'Adjective',
+	4: 'Adverb',
+	5: 'Adposition',
+	6: 'Conjunction',
+	7: 'Phrasal',
+	8: 'Particle',
+	101: 'Noun Phrase',
+	102: 'Verb Phrase',
+	103: 'Adjective Phrase',
+	104: 'Adverb Phrase',
+	105: 'Clause',
 }
 
 type TransformedData = {
@@ -40,8 +40,8 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	return transformed_data
 
 	type DbRow = {
-		id: string,
-		category_id: string
+		id: number,
+		category_id: number
 		feature: string
 		encoded_values: string
 		encoded_examples: string
@@ -58,7 +58,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 
 		  FROM	Features_Source
 
-		  ORDER BY (category_id + 0), (id + 0)
+		  ORDER BY category_id, id
 	  `
 		const results = tbta_db.prepare<DbRow, []>(sql).all().map(row => ({
 			...row,
