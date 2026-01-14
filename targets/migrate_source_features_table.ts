@@ -1,11 +1,11 @@
 import Database from 'bun:sqlite'
 
-export function migrate_source_features(tbta_db: Database, sources_db: Database) {
+export function migrate_source_features_table(tbta_db: Database, project: string, targets_db: Database) {
 	const transformed_data = transform_tbta_data(tbta_db)
 
-	create_tabitha_table(sources_db)
+	create_tabitha_table(targets_db)
 
-	load_data(sources_db, transformed_data)
+	load_data(targets_db, project, transformed_data)
 }
 
 const CATEGORIES: Record<number, string> = {
@@ -138,10 +138,11 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 }
 
 function create_tabitha_table(tabitha_sources_db: Database) {
-	console.log(`Prepping Features table in ${tabitha_sources_db.filename}...`)
+	console.log(`Prepping Source_Features table in ${tabitha_sources_db.filename}...`)
 
 	tabitha_sources_db.run(`
-		CREATE TABLE IF NOT EXISTS Features (
+		CREATE TABLE IF NOT EXISTS Source_Features (
+			project		TEXT,
 			category		TEXT,		-- the name of the category this feature is associated with
 			feature		TEXT,		-- the name of the feature
 			position		INTEGER,	-- the index/position of the feature within the semantic representation
@@ -152,7 +153,7 @@ function create_tabitha_table(tabitha_sources_db: Database) {
 	`)
 
 	tabitha_sources_db.run(`
-		DELETE FROM Features
+		DELETE FROM Source_Features
 	`)
 
 	console.log('done.')
@@ -160,14 +161,14 @@ function create_tabitha_table(tabitha_sources_db: Database) {
 	return tabitha_sources_db
 }
 
-function load_data(targets_db: Database, transformed_data: TransformedData[]) {
-	console.log(`Loading data into Features table...`)
+function load_data(targets_db: Database, project: string, transformed_data: TransformedData[]) {
+	console.log(`Loading data into Source_Features table...`)
 
 	transformed_data.map(async ({category, feature, position, code, value, example}) => {
 		targets_db.run(`
-			INSERT INTO Features (category, feature, position, code, value, example)
-			VALUES (?, ?, ?, ?, ?, ?)
-		`, [category, feature, position, code, value, example])
+			INSERT INTO Source_Features (project, category, feature, position, code, value, example)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+		`, [project, category, feature, position, code, value, example])
 
 		await Bun.write(Bun.stdout, '.')
 	})
