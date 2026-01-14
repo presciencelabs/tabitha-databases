@@ -1,21 +1,21 @@
 {
-   "$schema": "node_modules/wrangler/config-schema.json",
-   "compatibility_date": "2025-09-25",
-   "d1_databases": [
-      {
-         "binding": "DB_Ontology",
-         "database_name": "Ontology.9494.2025-12-18",
-         "database_id": "441ed35c-dbb6-4dd0-860c-aefe18be3fc8"
-      },
-      {
-         "binding": "DB_Sources",
-         "database_name": "Sources.2025-12-18",
-         "database_id": "1c094c81-ca66-45f4-af84-7e8fd1a4b9da"
-      },
-      {
-         "binding": "DB_Targets",
-         "database_name": "Targets.2025-12-18",
-         "database_id": "f5cc9899-9dfb-4d4f-8ba7-e92b5ea86897"
-      }
-   ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"compatibility_date": "2026-01-14",
+	"d1_databases": [
+		{
+			"binding": "DB_Ontology",
+			"database_name": "Ontology.9494.2025-12-18",
+			"database_id": "441ed35c-dbb6-4dd0-860c-aefe18be3fc8"
+		},
+		{
+			"binding": "DB_Sources",
+			"database_name": "Sources.2025-12-18",
+			"database_id": "1c094c81-ca66-45f4-af84-7e8fd1a4b9da"
+		},
+		{
+			"binding": "DB_Targets",
+			"database_name": "Targets_2026-01-14",
+			"database_id": "9c2c7c5b-bfe0-48f1-8bb7-c3e17ffc12b3"
+		}
+	]
 }

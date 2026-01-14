@@ -27,7 +27,7 @@ https://www.sqlite.org/cli.html#command_line_options
 
 ### Dump
 
-`sqlite3 example.sqlite .dump > example.sqlite.sql`
+`sqlite3 --escape off example.sqlite .dump > example.sqlite.sql`
 
 ### Diffing to understand changes
 
@@ -127,7 +127,7 @@ Merging into `main` will automatically make the workflow available on its schedu
 
 #### Dump to a `.sql` file
 
-`sqlite3 databases/Sources.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Sources.YYYY-MM-DD.tabitha.sqlite.sql`
+`sqlite3 --escape off databases/Sources.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Sources.YYYY-MM-DD.tabitha.sqlite.sql`
 
 ### Ontology
 
@@ -137,7 +137,7 @@ Merging into `main` will automatically make the workflow available on its schedu
 
 #### Dump to a `.sql` file
 
-`sqlite3 databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite.sql`
+`sqlite3 --escape off databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite.sql`
 
 ### Targets
 
@@ -149,7 +149,7 @@ Merging into `main` will automatically make the workflow available on its schedu
 
 #### Dump to a `.sql` file
 
-`sqlite3 databases/Targets.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Targets.YYYY-MM-DD.tabitha.sqlite.sql`
+`sqlite3 --escape off databases/Targets.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Targets.YYYY-MM-DD.tabitha.sqlite.sql`
 
 ### Auth
 
