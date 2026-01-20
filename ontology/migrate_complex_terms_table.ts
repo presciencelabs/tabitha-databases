@@ -44,7 +44,7 @@ type ComplexTerm = {
 export function transform(rows: TabSeparatedValues[]): ComplexTerm[] {
 	return rows.map((row: TabSeparatedValues) => {
 		// TODO remove the blank column
-		const [term, part_of_speech, structure, pairing, explication, _, ontology_status, level, notes] = row.split('\t')
+		const [term, part_of_speech, structure, pairing, explication, ontology_status, level, notes] = row.split('\t')
 		const term_match = (term ?? '').trim().match(/^(.*)-([A-Z])$/)
 		const [stem, sense] = term_match ? [term_match[1], term_match[2]] : [term, '']
 		const level_match = (level ?? '').trim().match(/^level (\d)$/)
