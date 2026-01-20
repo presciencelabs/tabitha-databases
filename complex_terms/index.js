@@ -31,14 +31,16 @@ export default {
 					'structure'		 	TEXT,
 					'pairing' 			TEXT,
 					'explication' 		TEXT,
-					'ontology_status'	TEXT
+					'ontology_status'	TEXT,
+					'level'				NUMBER,
+					'notes'				TEXT
 				)
 			`).run()
 
 			const clear_stmt = db.prepare('DELETE FROM Complex_Terms')
-			const insert_stmt = db.prepare('INSERT INTO Complex_Terms VALUES (?, ?, ?, ?, ?, ?, ?)')
-			const insert_stmts = terms.map(({ stem, sense, part_of_speech, structure, pairing, explication, ontology_status }) =>
-				insert_stmt.bind(stem, sense, part_of_speech, structure, pairing, explication, ontology_status)
+			const insert_stmt = db.prepare('INSERT INTO Complex_Terms VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+			const insert_stmts = terms.map(({ stem, sense, part_of_speech, structure, pairing, explication, ontology_status, level, notes }) =>
+				insert_stmt.bind(stem, sense, part_of_speech, structure, pairing, explication, ontology_status, level, notes)
 			)
 
 			console.log('updating table with latest data')
