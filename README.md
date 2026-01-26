@@ -57,7 +57,7 @@ https://developers.cloudflare.com/workers/wrangler
 
 ## Deployment
 
-> ⚠️ the zip file must include Bible.sqlite, English.sqlite, Ontology.[sqlite|new], and Sample.sqlite.  The following command to migrate cannot be run until inflections are present in `./targets/inflections/csv` as well as `./databases/Sources.Complex.YYYY-MM-DD.tabitha.sqlite`
+> ⚠️ the zip file must include Bible.sqlite, English.sqlite, Ontology.[sqlite|new], and Sample.sqlite.  The following command to migrate cannot be run until inflections are present in `./targets/inflections/csv` as well as `./databases/Sources.Complex_YYYY-MM-DD.tabitha.sqlite`
 
 `bun migrate <location of a zip containing TBTA dbs> YYYY-MM-DD`
 
@@ -123,21 +123,21 @@ Merging into `main` will automatically make the workflow available on its schedu
 
 #### Create the TaBiThA database from the TBTA version
 
-`bun sources/migrate.ts databases/Bible.YYYY-MM-DD.tbta.sqlite databases/Community_Development_Texts.YYYY-MM-DD.tbta.sqlite databases/Grammar_Introduction.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite`
+`bun sources/migrate.ts databases/Bible_YYYY-MM-DD.tbta.sqlite databases/Community_Development_Texts_YYYY-MM-DD.tbta.sqlite databases/Grammar_Introduction_YYYY-MM-DD.tbta.sqlite databases/Sources_YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
-`sqlite3 --escape off databases/Sources.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Sources.YYYY-MM-DD.tabitha.sqlite.sql`
+`sqlite3 --escape off databases/Sources_YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Sources_YYYY-MM-DD.tabitha.sqlite.sql`
 
 ### Ontology
 
 #### Create the TaBiThA database from the TBTA version
 
-`bun ontology/migrate.ts databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
+`bun ontology/migrate.ts databases/Ontology_VERSION_YYYY-MM-DD.tbta.sqlite databases/Sources_YYYY-MM-DD.tabitha.sqlite databases/Ontology_VERSION_YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
-`sqlite3 --escape off databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite.sql`
+`sqlite3 --escape off databases/Ontology_VERSION_YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Ontology_VERSION_YYYY-MM-DD.tabitha.sqlite.sql`
 
 ### Targets
 
@@ -145,11 +145,11 @@ Merging into `main` will automatically make the workflow available on its schedu
 
 > ⚠️ Ensure the inflections have already been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
 
-`bun targets/migrate.ts databases/English.YYYY-MM-DD.tbta.sqlite databases/Targets.YYYY-MM-DD.tabitha.sqlite`
+`bun targets/migrate.ts databases/English_YYYY-MM-DD.tbta.sqlite databases/Targets_YYYY-MM-DD.tabitha.sqlite`
 
 #### Dump to a `.sql` file
 
-`sqlite3 --escape off databases/Targets.YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Targets.YYYY-MM-DD.tabitha.sqlite.sql`
+`sqlite3 --escape off databases/Targets_YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Targets_YYYY-MM-DD.tabitha.sqlite.sql`
 
 ### Auth
 

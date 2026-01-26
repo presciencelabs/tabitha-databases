@@ -16,7 +16,7 @@ const date = Bun.argv[3] 								// 2025-09-25
 
 await stage_tbta_files(`${dir}/${date}`)
 
-const ls_output = await $`ls databases/*.${date}.tbta.sqlite`.text()
+const ls_output = await $`ls databases/*_${date}.tbta.sqlite`.text()
 const dbs_for_migration = ls_output
 	.split('\n')
 	.filter(Boolean) // remove empty strings
@@ -69,7 +69,7 @@ for (const cfg of configs) {
 	await $`sqlite3 ${dest_file} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${dest_file}.sql`
 
 	console.log(`Creating new D1 database for ${cfg.key}...`)
-	const d1_db_name = dest_file.match(/([^/]+)\.tabitha\.sqlite$/)?.[1] // => Sources.2025-10-22 or Ontology.9493.2025-10-22
+	const d1_db_name = dest_file.match(/([^/]+)\.tabitha\.sqlite$/)?.[1] // => Sources_2025-10-22 or Ontology_9493_2025-10-22
 	const cmd_output_new_db = await $`bun wrangler d1 create ${d1_db_name}`.text()
 
 	console.log(`Updating wrangler.jsonc with new ${cfg.key} database info...`)
@@ -104,7 +104,7 @@ async function stage_tbta_files(working_dir: string) {
 	function normalize_name(name: string) {
 		const src = `${working_dir}/${name}.sqlite`
 
-		let dest = `./databases/${name}.${date}.tbta.sqlite`
+		let dest = `./databases/${name}_${date}.tbta.sqlite`
 		if (name === 'Ontology') {
 			dest = derive_ontology_name()
 		}
@@ -118,7 +118,7 @@ async function stage_tbta_files(working_dir: string) {
 
 			const version = Version.split('.').at(-1) // 3.0.9493 => 9493
 
-			return `./databases/Ontology.${version}.${date}.tbta.sqlite`
+			return `./databases/Ontology_${version}_${date}.tbta.sqlite`
 		}
 	}
 }
@@ -128,7 +128,7 @@ function derive_dest_file(key: DbConfig['key']) {
 
 	if (tbta_file) return tbta_file.replace('.tbta.', '.tabitha.')
 
-	return `./databases/${key}.${date}.tabitha.sqlite`
+	return `./databases/${key}_${date}.tabitha.sqlite`
 }
 
 type D1_META = {
@@ -141,15 +141,15 @@ function extract_new_db_info(output: string): D1_META {
 	//
 	// ⛅️ wrangler 4.42.0
 	// ───────────────────
-	// ✅ Successfully created DB 'Sources.2025-10-05-f' in region ENAM
+	// ✅ Successfully created DB 'Sources_2025-10-05' in region ENAM
 	// Created your new D1 database.
 
 	// To access your new D1 Database in your Worker, add the following snippet to your configuration file:
 	// {
 	// 	"d1_databases": [
 	// 		{
-	// 			"binding": "Sources2025_10_05_f",
-	// 			"database_name": "Sources.2025-10-05-f",
+	// 			"binding": "Sources_2025_10_05",
+	// 			"database_name": "Sources_2025-10-05",
 	// 			"database_id": "90ccd9c5-37ee-4b83-9fca-3811ce0ca010"
 	// 		}
 	// 	]
