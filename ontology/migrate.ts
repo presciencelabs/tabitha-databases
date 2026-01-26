@@ -6,9 +6,9 @@ import { migrate_senses } from './migrate_senses'
 import { migrate_version_table } from './migrate_version_table'
 import { summarize_migration } from './summarize_migration'
 
-// usage: `bun ontology/migrate.ts databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite databases/Sources.YYYY-MM-DD.tabitha.sqlite databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite`
-const tbta_db_name 		= Bun.argv[2]	// databases/Ontology.VERSION.YYYY-MM-DD.tbta.sqlite
-const tabitha_db_name 	= Bun.argv[4]	// databases/Ontology.VERSION.YYYY-MM-DD.tabitha.sqlite
+// usage: `bun ontology/migrate.ts databases/Ontology_VERSION_YYYY-MM-DD.tbta.sqlite databases/Sources_YYYY-MM-DD.tabitha.sqlite databases/Ontology_VERSION_YYYY-MM-DD.tabitha.sqlite`
+const tbta_db_name = Bun.argv[2]	// databases/Ontology_VERSION_YYYY-MM-DD.tbta.sqlite
+const tabitha_db_name = Bun.argv[4]	// databases/Ontology_VERSION_YYYY-MM-DD.tabitha.sqlite
 
 const tbta_db = new Database(tbta_db_name)
 const tabitha_db = new Database(tabitha_db_name)
@@ -22,9 +22,9 @@ import_legacy_tables(tbta_db, tabitha_db)
 migrate_senses(tabitha_db)
 await migrate_complex_terms_table(tabitha_db)
 
-const sources_db_name = Bun.argv[3]	// databases/Sources.YYYY-MM-DD.tabitha.sqlite
+const sources_db_name = Bun.argv[3]	// databases/Sources_YYYY-MM-DD.tabitha.sqlite
 const sources_db = new Database(sources_db_name)
-const sources_db_complex = new Database(sources_db_name.replace('Sources', 'Sources.Complex'))
+const sources_db_complex = new Database(sources_db_name.replace('Sources', 'Sources_Complex'))
 await load_examples(tabitha_db, sources_db, sources_db_complex)
 
 console.log(`Optimizing ${tabitha_db_name}...`)
