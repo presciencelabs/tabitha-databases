@@ -1,9 +1,8 @@
-import { extract, transform } from '../ontology/migrate_complex_terms_table'
+import { extract, transform } from './migrate_complex_terms_table'
 
 export default {
 	// https://developers.cloudflare.com/workers/runtime-apis/handlers/scheduled/
-	/** @param {import('@cloudflare/workers-types').D1Database} db */
-	async scheduled(event, {DB_Ontology: db}) {
+	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
 		const extracted_rows = await extract()
 
 		if (extracted_rows.length < 1) {
@@ -15,15 +14,12 @@ export default {
 		await load(data)
 
 		// https://developers.cloudflare.com/d1/build-databases/query-databases/#await-stmtfirstcolumn
-		const num_terms = await db.prepare('SELECT COUNT(*) AS count FROM Complex_Terms').first('count')
+		const num_terms = await env.DB_Ontology.prepare('SELECT COUNT(*) AS count FROM Complex_Terms').first('count')
 		console.log(`updated ${num_terms} complex terms in database.`)
 
-		/**
-		 * @returns {(terms: ComplexTerm[]) => Promise<void>}
-		 */
-		async function load(terms) {
+		async function load(terms: ReturnType<typeof transform>) {
 			// https://developers.cloudflare.com/d1/build-databases/query-databases
-			db.prepare(`
+			env.DB_Ontology.prepare(`
 				CREATE TABLE IF NOT EXISTS Complex_Terms (
 					'stem' 				TEXT,
 					'sense'				TEXT,
@@ -37,8 +33,8 @@ export default {
 				)
 			`).run()
 
-			const clear_stmt = db.prepare('DELETE FROM Complex_Terms')
-			const insert_stmt = db.prepare('INSERT INTO Complex_Terms VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+			const clear_stmt = env.DB_Ontology.prepare('DELETE FROM Complex_Terms')
+			const insert_stmt = env.DB_Ontology.prepare('INSERT INTO Complex_Terms VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
 			const insert_stmts = terms.map(({ stem, sense, part_of_speech, structure, pairing, explication, ontology_status, level, notes }) =>
 				insert_stmt.bind(stem, sense, part_of_speech, structure, pairing, explication, ontology_status, level, notes)
 			)
@@ -46,7 +42,7 @@ export default {
 			console.log('updating table with latest data')
 
 			// https://developers.cloudflare.com/d1/build-databases/query-databases/#batch-statements
-			await db.batch([
+			await env.DB_Ontology.batch([
 				clear_stmt,
 				...insert_stmts,
 			])

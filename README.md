@@ -57,7 +57,7 @@ https://developers.cloudflare.com/workers/wrangler
 
 ## Deployment
 
-> ⚠️ the zip file must include Bible.sqlite, English.sqlite, Ontology.[sqlite|new], and Sample.sqlite.  The following command to migrate cannot be run until inflections are present in `./targets/inflections/csv` as well as `./databases/Sources.Complex_YYYY-MM-DD.tabitha.sqlite`
+> ⚠️ the zip file must include Bible.sqlite, English.sqlite, Ontology.[sqlite|new], and Sample.sqlite.  The following command to migrate cannot be run until inflections are present in `./targets/inflections/csv` as well as `./databases/Sources_Complex_YYYY-MM-DD.tabitha.sqlite`
 
 `bun migrate <location of a zip containing TBTA dbs> YYYY-MM-DD`
 
@@ -71,7 +71,7 @@ Complex terms will be updated from the "How to" spreadsheet to the database on a
 
 #### Testing locally
 
-`bun wrangler --config complex_terms/wrangler.toml dev --test-scheduled`
+`bun wrangler --config ontology/wrangler.jsonc dev --test-scheduled`
 
  Hit `curl 'http://localhost.tabitha.bible:8787/__scheduled'` in a separate terminal to run it.
 
@@ -80,7 +80,7 @@ Complex terms will be updated from the "How to" spreadsheet to the database on a
 1. Ensure the correct database binding is set in `wrangler.toml`
 1. Commit and push, deployment will occur automatically
 
-> ℹ️ `bun wrangler --config complex_terms/wrangler.toml deploy`
+> ℹ️ `bun wrangler --config ontology/wrangler.jsonc deploy`
 
 ### Sources
 
