@@ -1,0 +1,24 @@
+{
+	"$schema": "../node_modules/wrangler/config-schema.json",
+	"name": "sync_complex_terms",
+	"main": "update_complex_terms_worker.ts",
+	"compatibility_date": "2026-02-05",
+	"workers_dev": false,
+	"triggers": {
+		"crons": [
+			"0 */12 * * *"
+		]
+	},
+	"d1_databases": [
+		{
+			"binding": "DB_Ontology",
+			"database_name": "Ontology.9494.2025-12-18",
+			"database_id": "441ed35c-dbb6-4dd0-860c-aefe18be3fc8"
+		}
+	],
+	"observability": {
+		"logs": {
+			"enabled": true
+		}
+	}
+}
