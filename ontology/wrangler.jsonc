@@ -2,7 +2,7 @@
 	"$schema": "../node_modules/wrangler/config-schema.json",
 	"name": "sync_complex_terms",
 	"main": "update_complex_terms_worker.ts",
-	"compatibility_date": "2025-10-31",
+	"compatibility_date": "2026-02-05",
 	"workers_dev": false,
 	"triggers": {
 		"crons": [
