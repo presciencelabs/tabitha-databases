@@ -4,7 +4,7 @@ import { migrate_source_texts } from './migrate_source_texts'
 
 // usage: `bun sources/migrate.ts databases/Bible_YYYY-MM-DD.tbta.sqlite databases/Community_Development_Texts_YYYY-MM-DD.tbta.sqlite databases/Grammar_Introduction_YYYY-MM-DD.tbta.sqlite databases/Sources_YYYY-MM-DD.tabitha.sqlite`
 const tbta_sources_from_input = Bun.argv.slice(2, -1) // individual database names representing all of the sources
-const tabitha_db_name = Bun.argv.at(-1) // the final database, i.e., last argument
+const tabitha_db_name = Bun.argv.at(-1) 					// the final database, i.e., last argument
 
 const tabitha_sources_db = new Database(tabitha_db_name)
 
