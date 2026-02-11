@@ -66,7 +66,7 @@ for (const cfg of configs) {
 	dbs_for_migration.push(dest_file)
 
 	console.log(`Creating dump of ${cfg.key} database...`)
-	await $`sqlite3 ${dest_file} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${dest_file}.sql`
+	await $`sqlite3 --escape off ${dest_file} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${dest_file}.sql`
 
 	console.log(`Creating new D1 database for ${cfg.key}...`)
 	const d1_db_name = dest_file.match(/([^/]+)\.tabitha\.sqlite$/)?.[1] // => Sources_2025-10-22 or Ontology_9493_2025-10-22
@@ -98,7 +98,7 @@ async function stage_tbta_files(working_dir: string) {
 			.map(db_name => db_name.match(/([^/]+)\.sqlite$/)?.[1] ?? '') // ~/Downloads/2025-09-25/Bible.sqlite => Bible
 			.filter(Boolean) // remove empty strings
 			.map(normalize_name)
-			.map(async ({ src, dest }) => await $`mv ${src} ${dest}`)
+			.map(async ({ src, dest }) => await $`cp ${src} ${dest}`)
 	}
 
 	function normalize_name(name: string) {
@@ -143,7 +143,7 @@ function extract_new_db_info(output: string): D1_META {
 	// ───────────────────
 	// ✅ Successfully created DB 'Sources_2025-10-05' in region ENAM
 	// Created your new D1 database.
-
+	//
 	// To access your new D1 Database in your Worker, add the following snippet to your configuration file:
 	// {
 	// 	"d1_databases": [
