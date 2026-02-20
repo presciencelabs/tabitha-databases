@@ -8,14 +8,12 @@ if (!Bun.which('sqlite3')) {
 }
 
 if (Bun.argv.length !== 4) {
-	throw new Error('Usage: bun migrate.ts "~/Downloads/TBTA 9-25-25.zip" 2025-09-25')
+	throw new Error('Usage: bun migrate.ts "<directory containing all necessary TBTA dbs>" YYYY-MM-DD')
 }
-const zip = Bun.argv[2] 								// "~/Downloads/TBTA 9-25-25.zip"
-const dir = zip.slice(0, zip.lastIndexOf('/')) 	// "~/Downloads/"
-const date = Bun.argv[3] 								// 2025-09-25
+const dir_w_tbta_dbs = Bun.argv[2] // "~/Downloads/TBTA 9-25-25"
+const date = Bun.argv[3] // 2025-09-25
 
-await stage_tbta_files(`${dir}/${date}`)
-
+await stage_tbta_files(dir_w_tbta_dbs)
 const ls_output = await $`ls databases/*_${date}.tbta.sqlite`.text()
 const dbs_for_migration = ls_output
 	.split('\n')
@@ -23,33 +21,48 @@ const dbs_for_migration = ls_output
 
 type DbConfig = {
 	key: 'Sources' | 'Ontology' | 'Targets'
-	migration_input_args(): string[]
+	migration_input_args(): Promise<string[]>
 }
 const configs: DbConfig[] = [
 	{
 		key: 'Sources',
-		migration_input_args() {
-			const bible = dbs_for_migration.find(name => name.includes('Bible') && name.endsWith('.tbta.sqlite'))
-			if (!bible) throw new Error(`Bible database not found for ${this.key} migration.`)
+		async migration_input_args() {
+			const sources = ['Bible', 'CommunityDevelopmentTexts', 'GrammarIntroduction']
 
-			return [bible]
-		},
+			const args = await Promise.all(
+				sources.map(async name => {
+					const match = dbs_for_migration.find(db => db.includes(name))
+					if (match) return match
+
+					const latest = (await $`ls -t databases/${name}_*.tbta.sqlite | head -n 1`.text()).trim()
+					if (latest) console.log(`Source ${name} missing for ${date}, using: ${latest}`)
+					return latest
+				})
+			)
+
+			return args.filter(Boolean)
+		}
 	},
 	{
 		key: 'Ontology',
-		migration_input_args() {
-			const ontology = dbs_for_migration.find(name => name.includes('Ontology') && name.endsWith('.tbta.sqlite'))
-			if (!ontology) throw new Error(`Ontology database not found for ${this.key} migration.`)
+		async migration_input_args() {
+			const [ontology, sources] = await Promise.all(
+				['Ontology', 'Sources'].map(async name => {
+					const match = dbs_for_migration.find(db => db.includes(name))
+					if (match) return match
 
-			const sources = dbs_for_migration.find(name => name.includes('Sources') && name.endsWith('.tabitha.sqlite'))
-			if (!sources) throw new Error(`Sources database not found for ${this.key} migration.`)
+					const latest = (await $`ls -t databases/${name}_*.tbta.sqlite | head -n 1`.text()).trim()
+					if (latest) console.log(`${name} missing for ${date}, using: ${latest}`)
+					return latest
+				})
+			)
 
 			return [ontology, sources]
 		},
 	},
 	{
 		key: 'Targets',
-		migration_input_args() {
+		async migration_input_args() {
 			const english = dbs_for_migration.find(name => name.includes('English') && name.endsWith('.tbta.sqlite'))
 			if (!english) throw new Error(`English database not found for ${this.key} migration.`)
 
@@ -60,8 +73,9 @@ const configs: DbConfig[] = [
 
 for (const cfg of configs) {
 	console.log(`Migrating ${cfg.key} database...`)
+
 	const dest_file = derive_dest_file(cfg.key)
-	await $`bun ${cfg.key.toLowerCase()}/migrate.ts ${cfg.migration_input_args()} ${dest_file}`
+	await $`bun ${cfg.key.toLowerCase()}/migrate.ts ${await cfg.migration_input_args()} ${dest_file}`
 
 	dbs_for_migration.push(dest_file)
 
@@ -81,15 +95,13 @@ for (const cfg of configs) {
 }
 
 async function stage_tbta_files(working_dir: string) {
-	await $`mkdir -p ${working_dir} && unzip -o ${zip} -d ${working_dir}`
-
 	for await (const file of new Glob('*.new').scan(working_dir)) {
 		await rename(`${working_dir}/${file}`, `${working_dir}/${file.replace('.new', '.sqlite')}`)
 	}
 
-	const unzipped_db_names = await $`ls ${working_dir}/*.sqlite`.text()
+	const tbta_db_names = await $`ls ${working_dir}/*.sqlite`.text()
 
-	await Promise.all(stage(unzipped_db_names))
+	await Promise.all(stage(tbta_db_names))
 
 	function stage(db_names: string): Promise<$.ShellOutput>[] {
 		return db_names

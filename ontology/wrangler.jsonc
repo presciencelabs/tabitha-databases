@@ -12,8 +12,8 @@
 	"d1_databases": [
 		{
 			"binding": "DB_Ontology",
-			"database_name": "Ontology_9494_2026-01-29",
-			"database_id": "cdc31345-4222-4a1c-a70e-442adb6374fc"
+			"database_name": "Ontology_9494_2026-02-19",
+			"database_id": "3eba39ce-12e7-40ad-b0a4-24c72fd0c5ab"
 		}
 	],
 	"observability": {

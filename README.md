@@ -57,9 +57,9 @@ https://developers.cloudflare.com/workers/wrangler
 
 ## Deployment
 
-> ⚠️ the zip file must include Bible.sqlite, English.sqlite, Ontology.[sqlite|new], and Sample.sqlite.  The following command to migrate cannot be run until inflections are present in `./targets/inflections/csv` as well as `./databases/Sources_Complex_YYYY-MM-DD.tabitha.sqlite`
+> ⚠️ a directory containing all necessary TBTA dbs must include Bible.sqlite, English.sqlite, Ontology.[sqlite|new], and Sample.sqlite.  The following command to migrate cannot be run until inflections are present in `./targets/inflections/csv` as well as `./databases/Sources_Complex_YYYY-MM-DD.tabitha.sqlite`
 
-`bun migrate.ts <location of a zip from a Windows system, containing TBTA dbs> YYYY-MM-DD`
+`bun migrate.ts <directory containing all necessary TBTA dbs> YYYY-MM-DD`
 
 ### Ontology
 
