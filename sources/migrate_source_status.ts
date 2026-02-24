@@ -50,9 +50,10 @@ export async function migrate_source_status(sources_db: Database, csv_dir: strin
  * Examples of accepted formats:
  *   "John 3"
  *   "Genesis 1:1-10"
+ *   "Jude 1-8"
  */
 function parse_verse_range(input: string): VerseRange {
-	const regex = /^([\dA-Za-z\s]+?)\s*(\d+)(?::\s*(\d+)-(\d+))?$/
+	const regex = /^([\dA-Za-z\s]+?)\s*(\d*):?\s*(?:(\d+)-(\d+))?$/
 	const match = input.trim().match(regex)
 
 	if (!match) {
@@ -70,7 +71,7 @@ function parse_verse_range(input: string): VerseRange {
 	return {
 		type: 'Bible',
 		id_primary: id_primary.trim(),
-		id_secondary,
+		id_secondary: id_secondary || '1',		// books like Jude only have one chapter, so default to "1" if no chapter is specified
 		id_tertiary_start: id_tertiary_start ? parseInt(id_tertiary_start) : null,
 		id_tertiary_end: id_tertiary_end ? parseInt(id_tertiary_end) : null,
 	}
