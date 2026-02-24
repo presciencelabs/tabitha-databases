@@ -10,6 +10,7 @@ export function migrate_source_texts(tabitha_sources_db: Database, tbta_sources_
 			'id_tertiary', -- for Bible, this would hold the verse, e.g., 1
 			'phase_1_encoding',
 			'semantic_encoding',
+			'status',
 			'notes'
 		)
 	`)
@@ -64,7 +65,7 @@ export function migrate_source_texts(tabitha_sources_db: Database, tbta_sources_
 
 					tabitha_sources_db.run(`
 						INSERT INTO Sources
-						VALUES (?, ?, ?, ?, ?, ?, ?)
+						VALUES (?, ?, ?, ?, ?, ?, '', ?)
 					`, [type, id_primary, id_secondary, id_tertiary, phase_1_encoding, semantic_encoding, notes])
 
 					await Bun.write(Bun.stdout, '.')
