@@ -13,11 +13,12 @@ const tabitha_sources_db = new Database(tabitha_db_name)
 tabitha_sources_db.run('PRAGMA journal_mode = WAL')
 
 migrate_source_texts(tabitha_sources_db, tbta_sources_from_input)
-await migrate_source_status(tabitha_sources_db, './sources/status')
 
 const date = tabitha_db_name?.match(/(\d{4}-\d{2}-\d{2})\.tabitha\.sqlite$/)?.[1]
 const tbta_sample_db = new Database(`databases/Sample_${date}.tbta.sqlite`)
 migrate_source_features(tbta_sample_db, tabitha_sources_db)
+
+await migrate_source_status(tabitha_sources_db, './sources/status', date || '')
 
 console.log(`Optimizing ${tabitha_db_name}...`)
 tabitha_sources_db.run(`VACUUM`)

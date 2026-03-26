@@ -18,7 +18,7 @@ type VerseStatusRecord = {
 type InputStatus = 'Not Started' | 'STACK'
 	| 'Drafter [HE1]' | 'First Review' | 'Second Review' | 'Checker [HE2>EBT]'
 	| 'Zoho > ParaText' | 'Consultant' | 'Holding' | 'Phase 2'
-	| 'Phase 3 (POLISHING)' | 'Completed This Period' | 'Complete' | 'Previously Complete'
+	| 'Phase 3 (POLISHING)' | 'Polish 2nd Language' | 'Completed This Period' | 'Complete' | 'Previously Complete'
 
 type SourceStatus = 'Not Started' | 'Initial Analysis in Progress' | 'Initial Analysis Complete' | 'Final Review in Progress' | 'Ready to Translate'
 
@@ -35,12 +35,13 @@ const status_mapping: Record<InputStatus, SourceStatus> = {
 	'Phase 2': 'Initial Analysis Complete',
 	'Completed This Period': 'Initial Analysis Complete',
 	'Phase 3 (POLISHING)': 'Final Review in Progress',
+	'Polish 2nd Language': 'Ready to Translate',
 	'Complete': 'Ready to Translate',
 	'Previously Complete': 'Ready to Translate'
 }
 
-export async function migrate_source_status(sources_db: Database, csv_dir: string): Promise<void> {
-	const word_forms = await extract(csv_dir)
+export async function migrate_source_status(sources_db: Database, csv_dir: string, date: string): Promise<void> {
+	const word_forms = await extract(csv_dir, date)
 
 	await load_data(word_forms, sources_db)
 }
@@ -77,10 +78,10 @@ function parse_verse_range(input: string): VerseRange {
 	}
 }
 
-async function extract(csv_dir: string): Promise<VerseStatusRecord[]> {
+async function extract(csv_dir: string, date: string): Promise<VerseStatusRecord[]> {
 	console.log(`Getting verse statuses from the CSV files...`)
 
-	const filenames = ['OT verse status.csv', 'NT verse status.csv']
+	const filenames = [`OT_verse_status_${date}.csv`, `NT_verse_status_${date}.csv`]
 
 	const csv_contents_by_file = (await Promise.all(filenames.map(filename => Bun.file(`${csv_dir}/${filename}`).text())))
 	const normalized_data = csv_contents_by_file.map(normalize).flat()
