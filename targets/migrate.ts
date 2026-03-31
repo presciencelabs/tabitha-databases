@@ -13,7 +13,7 @@ const BETWEEN_SLASH_AND_UNDERSCORE = new RegExp('/([^_]+)_')
 const project = tbta_db_name.match(BETWEEN_SLASH_AND_UNDERSCORE)?.[1] ?? '' 	// English
 const targets_db_name = Bun.argv[3]															// databases/Targets_YYYY-MM-DD.tabitha.sqlite
 
-const tbta_db = new Database(tbta_db_name)
+const tbta_db = new Database(tbta_db_name, { readwrite: true, create: false })
 const targets_db = new Database(targets_db_name)
 
 // drastic perf improvement: https://www.sqlite.org/pragma.html#pragma_journal_mode
