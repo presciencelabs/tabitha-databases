@@ -9,18 +9,18 @@
       },
       {
          "binding": "DB_Ontology",
-         "database_name": "Ontology_9494_2026-02-19",
-         "database_id": "3eba39ce-12e7-40ad-b0a4-24c72fd0c5ab"
+         "database_name": "Ontology_9494_2026-03-26",
+         "database_id": "138a521c-cbcb-49e5-91c6-af2d0288c980"
       },
       {
          "binding": "DB_Sources",
-         "database_name": "Sources_2026-02-19",
-         "database_id": "e4ed57ed-5e17-40bf-abdc-26cd1ca612c8"
+         "database_name": "Sources_2026-03-26",
+         "database_id": "466d662f-e527-4fe4-81e7-23069b36ff73"
       },
       {
          "binding": "DB_Targets",
-         "database_name": "Targets_2026-02-19",
-         "database_id": "0b989a1b-50c0-4f9b-9931-e45fcd2cd651"
+         "database_name": "Targets_2026-03-26",
+         "database_id": "489aac88-388c-45cc-874e-0070518a80df"
       }
    ]
 }
