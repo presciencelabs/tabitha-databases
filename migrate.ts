@@ -15,13 +15,14 @@ const date = Bun.argv[3] // 2025-09-25
 
 await stage_tbta_files(dir_w_tbta_dbs)
 const ls_output = await $`ls databases/*_${date}.tbta.sqlite`.text()
-const dbs_for_migration = ls_output
+const migration_dbs = ls_output
 	.split('\n')
 	.filter(Boolean) // remove empty strings
 
 type DbConfig = {
 	key: 'Sources' | 'Ontology' | 'Targets'
 	migration_input_args(): Promise<string[]>
+	migration_output_file(): Promise<string>
 }
 const configs: DbConfig[] = [
 	{
@@ -31,42 +32,46 @@ const configs: DbConfig[] = [
 
 			const args = await Promise.all(
 				sources.map(async name => {
-					const match = dbs_for_migration.find(db => db.includes(name))
+					const match = migration_dbs.find(db => db.includes(name))
 					if (match) return match
 
 					const latest = (await $`ls -t databases/${name}_*.tbta.sqlite | head -n 1`.text()).trim()
-					if (latest) console.log(`Source ${name} missing for ${date}, using: ${latest}`)
+
+					if (latest) console.log(`Source ${name} missing for ${date}, using: ${latest} instead.`)
+
 					return latest
 				})
 			)
 
 			return args.filter(Boolean)
-		}
+		},
+		async migration_output_file() {
+			return `databases/${this.key}_${date}.tabitha.sqlite`
+		},
 	},
 	{
 		key: 'Ontology',
 		async migration_input_args() {
-			const [ontology, sources] = await Promise.all(
-				['Ontology', 'Sources'].map(async name => {
-					const match = dbs_for_migration.find(db => db.includes(name))
-					if (match) return match
+			const sources = await configs.find(cfg => cfg.key === 'Sources')!.migration_output_file()
 
-					const latest = (await $`ls -t databases/${name}_*.tbta.sqlite | head -n 1`.text()).trim()
-					if (latest) console.log(`${name} missing for ${date}, using: ${latest}`)
-					return latest
-				})
-			)
+			return [sources]
+		},
+		async migration_output_file() {
+			const ontology_db_name = (await $`ls databases/Ontology_*_${date}.tabitha.sqlite`.text()).trim()
 
-			return [ontology, sources]
+			return ontology_db_name
 		},
 	},
 	{
 		key: 'Targets',
 		async migration_input_args() {
-			const english = dbs_for_migration.find(name => name.includes('English') && name.endsWith('.tbta.sqlite'))
+			const english = migration_dbs.find(name => name.includes('English') && name.endsWith('.tbta.sqlite'))
 			if (!english) throw new Error(`English database not found for ${this.key} migration.`)
 
 			return [english]
+		},
+		async migration_output_file() {
+			return `databases/${this.key}_${date}.tabitha.sqlite`
 		},
 	},
 ]
@@ -74,16 +79,15 @@ const configs: DbConfig[] = [
 for (const cfg of configs) {
 	console.log(`Migrating ${cfg.key} database...`)
 
-	const dest_file = derive_dest_file(cfg.key)
-	await $`bun ${cfg.key.toLowerCase()}/migrate.ts ${await cfg.migration_input_args()} ${dest_file}`
-
-	dbs_for_migration.push(dest_file)
+	const input_args = await cfg.migration_input_args()
+	const output_file = await cfg.migration_output_file()
+	await $`bun ${cfg.key.toLowerCase()}/migrate.ts ${input_args.join(' ')} ${output_file}`
 
 	console.log(`Creating dump of ${cfg.key} database...`)
-	await $`sqlite3 --escape off ${dest_file} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${dest_file}.sql`
+	await $`sqlite3 --escape off ${output_file} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${output_file}.sql`
 
 	console.log(`Creating new D1 database for ${cfg.key}...`)
-	const d1_db_name = dest_file.match(/([^/]+)\.tabitha\.sqlite$/)?.[1] // => Sources_2025-10-22 or Ontology_9493_2025-10-22
+	const d1_db_name = output_file.match(/([^/]+)\.tabitha\.sqlite$/)?.[1] // => Sources_2025-10-22 or Ontology_9493_2025-10-22
 	const cmd_output_new_db = await $`bun wrangler d1 create ${d1_db_name}`.text()
 
 	console.log(`Updating wrangler.jsonc with new ${cfg.key} database info...`)
@@ -91,7 +95,7 @@ for (const cfg of configs) {
 	await update_deployment_config(new_db_info, `DB_${cfg.key}`)
 
 	console.log(`Deploying new ${cfg.key} data to D1...`)
-	await $`bun wrangler d1 execute ${d1_db_name} --file ${dest_file}.sql --remote`.quiet()
+	await $`bun wrangler d1 execute ${d1_db_name} --file ${output_file}.sql --remote`.quiet()
 }
 
 async function stage_tbta_files(working_dir: string) {
@@ -100,7 +104,7 @@ async function stage_tbta_files(working_dir: string) {
 	}
 
 	const tbta_db_names = await $`ls ${working_dir}/*.sqlite`.text()
-
+	console.log('attempting to stage the following:', tbta_db_names)
 	await Promise.all(stage(tbta_db_names))
 
 	function stage(db_names: string): Promise<$.ShellOutput>[] {
@@ -124,23 +128,15 @@ async function stage_tbta_files(working_dir: string) {
 		return { src, dest }
 
 		function derive_ontology_name() {
-			const ontology = new Database(src, { readonly: true })
+			const ontology = new Database(src, { readwrite: true, create: false })
 
-			const { Version } = ontology.query('SELECT Version FROM OntologyVersion').get() as { Version: string }
+			const { version } = ontology.query('SELECT version FROM Version').get() as { version: string }
 
-			const version = Version.split('.').at(-1) // 3.0.9493 => 9493
+			const minor_version = version.split('.').at(-1) // 3.0.9493 => 9493
 
-			return `./databases/Ontology_${version}_${date}.tbta.sqlite`
+			return `./databases/Ontology_${minor_version}_${date}.tabitha.sqlite`
 		}
 	}
-}
-
-function derive_dest_file(key: DbConfig['key']) {
-	const tbta_file = dbs_for_migration.find(name => name.includes(key) && name.endsWith('.tbta.sqlite'))
-
-	if (tbta_file) return tbta_file.replace('.tbta.', '.tabitha.')
-
-	return `./databases/${key}_${date}.tabitha.sqlite`
 }
 
 type D1_META = {

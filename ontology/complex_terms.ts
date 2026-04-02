@@ -21,7 +21,7 @@ export const CREATE_COMPLEX_TERMS_TABLE_SQL = `
 		'pairing' 			TEXT,
 		'explication' 		TEXT,
 		'ontology_status'	TEXT,
-		'level'				NUMBER,
+		'level'				INTEGER,
 		'notes'				TEXT
 	)
 `
