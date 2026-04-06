@@ -57,7 +57,11 @@ https://developers.cloudflare.com/workers/wrangler
 
 ## Deployment
 
-> ⚠️ a directory containing all necessary TBTA dbs must include Bible.sqlite, English.sqlite, Ontology.[sqlite|new], and Sample.sqlite.  The following command to migrate cannot be run until inflections are present in `./targets/inflections/csv` as well as `./databases/Sources_Complex_YYYY-MM-DD.tabitha.sqlite`
+> ⚠️ **Migration Prerequisites:**
+> Before running the migrate command, ensure you have:
+> * A directory containing the necessary TBTA databases (`Bible.sqlite`, `English.sqlite`, `Ontology.[sqlite|new]`, and `Sample.sqlite`).
+> * The updated inflections in `./targets/inflections/csv`.
+> * The `./databases/Sources_Complex_YYYY-MM-DD.tabitha.sqlite` database.
 
 `bun migrate.ts <directory containing all necessary TBTA dbs> YYYY-MM-DD`
 
@@ -98,7 +102,7 @@ This database should not need to be deployed on a regular basis.  Updates will e
 
 ### Database backups
 
-DB backups are handled via `wrangler` and stored in R2.
+DB backups are handled via `wrangler` and stored in R2.  This is done via `.github/workflows/db_backup.yml`
 
 #### Testing locally
 

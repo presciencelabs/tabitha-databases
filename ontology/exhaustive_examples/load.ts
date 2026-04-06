@@ -140,6 +140,7 @@ async function find_exhaustive_occurrences(db_ontology: Database, db_sources: Da
 		id_tertiary: string
 		semantic_encoding: string
 	}
+
 	const all_sources = db_sources.query<Source, []>(`
 		SELECT type, id_primary, id_secondary, id_tertiary, semantic_encoding
 		FROM Sources
@@ -207,7 +208,7 @@ async function find_exhaustive_occurrences(db_ontology: Database, db_sources: Da
 			}
 			const unmatched_complex = normalized_complex_contexts.filter(complex_entry => !normalized_base_contexts.some(base_entry => contexts_equal(complex_entry, base_entry)))
 			const unmatched_base = normalized_base_contexts.filter(base_entry => !normalized_complex_contexts.some(complex_entry => contexts_equal(complex_entry, base_entry)))
-			
+
 			// Check for any redundant occurrences due to other explicated concepts.
 			// eg. 'God blessed the seventh day' -> 'God blessed the Sabbath'
 			// 	Here 'Sabbath' was explicated, causing the context for 'bless' to differ from the base context.
@@ -359,7 +360,7 @@ function show_examples(db_ontology: Database) {
 		type ExampleContext = {
 			context_json: string
 		}
-		const examples = db_ontology.query<ExampleContext, (string|number)[]>(`
+		const examples = db_ontology.query<ExampleContext, (string | number)[]>(`
 			SELECT context_json
 			FROM Exhaustive_Examples
 			WHERE concept_stem = ? AND concept_sense = ? AND concept_part_of_speech = ? AND ref_id_primary = ? AND ref_id_secondary = ? AND ref_id_tertiary = ?
