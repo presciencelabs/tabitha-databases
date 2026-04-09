@@ -2,78 +2,8 @@ import Database from 'bun:sqlite'
 import { find_word_context } from './example_context'
 import { transform_semantic_encoding } from './semantic_encoding'
 
-const books = new Map<number, string>([
-	[1, 'Genesis'],
-	[2, 'Exodus'],
-	[3, 'Leviticus'],
-	[4, 'Numbers'],
-	[5, 'Deuteronomy'],
-	[6, 'Joshua'],
-	[7, 'Judges'],
-	[8, 'Ruth'],
-	[9, '1 Samuel'],
-	[10, '2 Samuel'],
-	[11, '1 Kings'],
-	[12, '2 Kings'],
-	[13, '1 Chronicles'],
-	[14, '2 Chronicles'],
-	[15, 'Ezra'],
-	[16, 'Nehemiah'],
-	[17, 'Esther'],
-	[18, 'Job'],
-	[19, 'Psalms'],
-	[20, 'Proverbs'],
-	[21, 'Ecclesiastes'],
-	[22, 'Song of Solomon'],
-	[23, 'Isaiah'],
-	[24, 'Jeremiah'],
-	[25, 'Lamentations'],
-	[26, 'Ezekiel'],
-	[27, 'Daniel'],
-	[28, 'Hosea'],
-	[29, 'Joel'],
-	[30, 'Amos'],
-	[31, 'Obadiah'],
-	[32, 'Jonah'],
-	[33, 'Micah'],
-	[34, 'Nahum'],
-	[35, 'Habakkuk'],
-	[36, 'Zephaniah'],
-	[37, 'Haggai'],
-	[38, 'Zechariah'],
-	[39, 'Malachi'],
-	[40, 'Matthew'],
-	[41, 'Mark'],
-	[42, 'Luke'],
-	[43, 'John'],
-	[44, 'Acts'],
-	[45, 'Romans'],
-	[46, '1 Corinthians'],
-	[47, '2 Corinthians'],
-	[48, 'Galatians'],
-	[49, 'Ephesians'],
-	[50, 'Philippians'],
-	[51, 'Colossians'],
-	[52, '1 Thessalonians'],
-	[53, '2 Thessalonians'],
-	[54, '1 Timothy'],
-	[55, '2 Timothy'],
-	[56, 'Titus'],
-	[57, 'Philemon'],
-	[58, 'Hebrews'],
-	[59, 'James'],
-	[60, '1 Peter'],
-	[61, '2 Peter'],
-	[62, '1 John'],
-	[63, '2 John'],
-	[64, '3 John'],
-	[65, 'Jude'],
-	[66, 'Revelation'],
-])
-
 export async function load_examples(db_ontology: Database, db_sources: Database, db_sources_complex: Database) {
-	create_reference_lookup_table(db_ontology)
-	create_or_clear_examples_table(db_ontology)
+	clear_examples_table(db_ontology)
 	await find_exhaustive_occurrences(db_ontology, db_sources, db_sources_complex)
 	update_occurrences(db_ontology)
 
@@ -81,43 +11,8 @@ export async function load_examples(db_ontology: Database, db_sources: Database,
 	show_top_occurrences(db_ontology)
 }
 
-function create_reference_lookup_table(db_ontology: Database) {
-	console.log(`Creating Reference_Lookup table in ${db_ontology.filename}...`)
-
-	db_ontology.run(`
-		CREATE TABLE IF NOT EXISTS Reference_Primary_Lookup (
-			type	TEXT,
-			id		INTEGER,
-			name	TEXT
-		)
-	`)
-
-	db_ontology.transaction(() => {
-		const insert_stmt = db_ontology.prepare('INSERT INTO Reference_Primary_Lookup (type, id, name) VALUES (?,?,?) ON CONFLICT(rowid) DO NOTHING')
-
-		for (const [id, name] of books) {
-			insert_stmt.run('Bible', id, name)
-		}
-	})()
-
-	console.log('done.')
-}
-
-function create_or_clear_examples_table(db_ontology: Database) {
-	console.log(`Creating and/or clearing Exhaustive_Examples table in ${db_ontology.filename}...`)
-
-	db_ontology.run(`
-		CREATE TABLE IF NOT EXISTS Exhaustive_Examples (
-			concept_stem				TEXT,
-			concept_sense				TEXT,
-			concept_part_of_speech	TEXT,
-			ref_type						TEXT,
-			ref_id_primary				INTEGER,
-			ref_id_secondary			INTEGER,
-			ref_id_tertiary			INTEGER,
-			context_json				TEXT
-		)
-	`)
+function clear_examples_table(db_ontology: Database) {
+	console.log(`Clearing Exhaustive_Examples table in ${db_ontology.filename}...`)
 
 	db_ontology.run('DELETE FROM Exhaustive_Examples')
 	db_ontology.run('UPDATE Concepts SET occurrences = 0')
@@ -294,7 +189,19 @@ async function update_occurrences(db_ontology: Database) {
 	console.log('done!')
 }
 
+function load_book_map(db_ontology: Database): Map<number, string> {
+	// load book names into a map for easy lookup
+	const books = db_ontology.query<{ id: number, name: string }, []>(`
+		SELECT id, name
+		FROM Reference_Primary_Lookup
+		WHERE type = 'Bible'
+	`).all()
+	return new Map(books.map(book => [book.id, book.name]))
+}
+
 function show_examples(db_ontology: Database) {
+	const books = load_book_map(db_ontology)
+
 	console.log()
 	console.log('======= Noun Examples =======')
 	// destination role; outer noun & adposition; destination role & adposition
@@ -366,7 +273,7 @@ function show_examples(db_ontology: Database) {
 			WHERE concept_stem = ? AND concept_sense = ? AND concept_part_of_speech = ? AND ref_id_primary = ? AND ref_id_secondary = ? AND ref_id_tertiary = ?
 		`).all(stem, sense, part_of_speech, ref_id_primary, ref_id_secondary, ref_id_tertiary)
 
-		console.log(`––– ${stem}–${sense} in ${books.get(ref_id_primary)} ${ref_id_secondary}:${ref_id_tertiary} –––`)
+		console.log(`––– ${stem}-${sense} in ${books.get(ref_id_primary)} ${ref_id_secondary}:${ref_id_tertiary} –––`)
 		for (const { context_json } of examples) {
 			console.log(context_json)
 		}
@@ -384,7 +291,7 @@ function show_top_occurrences(db_ontology: Database) {
 	const top_occurrences = db_ontology.query<OccurrenceData, []>(`
 		SELECT stem, sense, part_of_speech, occurrences
 		FROM Concepts
-		ORDER BY occurrences + 0 DESC
+		ORDER BY occurrences DESC
 		LIMIT 10
 	`).all()
 
