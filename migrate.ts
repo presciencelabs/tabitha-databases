@@ -2,7 +2,7 @@ import { $, Glob } from 'bun'
 import Database from 'bun:sqlite'
 import { cp, rename } from 'fs/promises'
 import { basename } from 'path'
-import wrangler_cfg from './wrangler.jsonc'
+import { parse, stringify } from 'comment-json'
 
 if (!Bun.which('sqlite3')) {
 	throw new Error('sqlite3 is not installed. Please install it and try again.')
@@ -127,9 +127,11 @@ async function stage_tbta_files(working_dir: string) {
 		return { src, dest }
 
 		function derive_ontology_name() {
-			const ontology = new Database(src, { readwrite: true, create: false })
+			const ontology = new Database(src, { readonly: true, create: false })
 
 			const { version } = ontology.query('SELECT version FROM Version').get() as { version: string }
+
+			ontology.close()
 
 			const minor_version = version.split('.').at(-1) // 3.0.9493 => 9493
 
@@ -168,10 +170,15 @@ function extract_new_db_info(output: string): D1_META {
 	return JSON.parse(output.match(JSON_OBJECT)?.[0]!).d1_databases[0]
 }
 
-function update_deployment_config(new_db_info: D1_META, binding: string) {
-	const index = wrangler_cfg.d1_databases.findIndex((db: D1_META) => db.binding === binding)
-	wrangler_cfg.d1_databases[index].database_name = new_db_info.database_name
-	wrangler_cfg.d1_databases[index].database_id = new_db_info.database_id
+async function update_deployment_config(new_db_info: D1_META, binding: string) {
+	const raw_cfg = await Bun.file('./wrangler.jsonc').text()
+	const wrangler_cfg: any = parse(raw_cfg)
 
-	return Bun.write('./wrangler.jsonc', JSON.stringify(wrangler_cfg, null, 3))
+	const index = wrangler_cfg.d1_databases.findIndex((db: D1_META) => db.binding === binding)
+	if (index !== -1) {
+		wrangler_cfg.d1_databases[index].database_name = new_db_info.database_name
+		wrangler_cfg.d1_databases[index].database_id = new_db_info.database_id
+
+		return Bun.write('./wrangler.jsonc', stringify(wrangler_cfg, null, 3))
+	}
 }
