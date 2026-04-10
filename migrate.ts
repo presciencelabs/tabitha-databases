@@ -1,6 +1,6 @@
 import { $, Glob } from 'bun'
 import Database from 'bun:sqlite'
-import { rename } from 'fs/promises'
+import { cp, rename } from 'fs/promises'
 import wrangler_cfg from './wrangler.jsonc'
 
 if (!Bun.which('sqlite3')) {
@@ -14,10 +14,8 @@ const dir_w_tbta_dbs = Bun.argv[2] // "~/Downloads/TBTA 9-25-25"
 const date = Bun.argv[3] // 2025-09-25
 
 await stage_tbta_files(dir_w_tbta_dbs)
-const ls_output = await $`ls databases/*_${date}.tbta.sqlite`.text()
-const migration_dbs = ls_output
-	.split('\n')
-	.filter(Boolean) // remove empty strings
+const migration_dbs = Array.from(new Glob(`databases/*_${date}.tbta.sqlite`).scanSync('.'))
+
 
 type DbConfig = {
 	key: 'Sources' | 'Ontology' | 'Targets'
@@ -35,11 +33,13 @@ const configs: DbConfig[] = [
 					const match = migration_dbs.find(db => db.includes(name))
 					if (match) return match
 
-					const latest = (await $`ls -t databases/${name}_*.tbta.sqlite | head -n 1`.text()).trim()
+					const files = Array.from(new Glob(`databases/${name}_*.tbta.sqlite`).scanSync('.'))
+					files.sort() // lexicographical sort will serve correctly for YYYY-MM-DD
+					const latest = files.pop()
 
 					if (latest) console.log(`Source ${name} missing for ${date}, using: ${latest} instead.`)
 
-					return latest
+					return latest || ''
 				})
 			)
 
@@ -57,7 +57,7 @@ const configs: DbConfig[] = [
 			return [sources]
 		},
 		async migration_output_file() {
-			const ontology_db_name = (await $`ls databases/Ontology_*_${date}.tabitha.sqlite`.text()).trim()
+			const ontology_db_name = Array.from(new Glob(`databases/Ontology_*_${date}.tabitha.sqlite`).scanSync('.'))[0] || ''
 
 			return ontology_db_name
 		},
@@ -103,18 +103,16 @@ async function stage_tbta_files(working_dir: string) {
 		await rename(`${working_dir}/${file}`, `${working_dir}/${file.replace('.new', '.sqlite')}`)
 	}
 
-	const tbta_db_names = await $`ls ${working_dir}/*.sqlite`.text()
-	console.log('attempting to stage the following:', tbta_db_names)
-	await Promise.all(stage(tbta_db_names))
+	const sqlite_files = Array.from(new Glob('*.sqlite').scanSync(working_dir))
+	console.log('attempting to stage the following:', sqlite_files)
+	await Promise.all(stage(sqlite_files))
 
-	function stage(db_names: string): Promise<$.ShellOutput>[] {
+	function stage(db_names: string[]): Promise<void>[] {
 		return db_names
-			.split('\n')
-			.filter(Boolean)
-			.map(db_name => db_name.match(/([^/]+)\.sqlite$/)?.[1] ?? '') // ~/Downloads/2025-09-25/Bible.sqlite => Bible
+			.map(db_name => db_name.match(/([^/]+)\.sqlite$/)?.[1] ?? '') // e.g., ~/Downloads/2025-09-25/Bible.sqlite => Bible
 			.filter(Boolean) // remove empty strings
 			.map(normalize_name)
-			.map(async ({ src, dest }) => await $`cp ${src} ${dest}`)
+			.map(async ({ src, dest }) => await cp(src, dest))
 	}
 
 	function normalize_name(name: string) {
