@@ -67,7 +67,7 @@ https://developers.cloudflare.com/workers/wrangler
 
 ### Ontology
 
-> ⚠️ Don't forget to update the `DB_Ontology` binding for the `sync_complex_terms` Worker when a new Ontology is created.
+> ℹ️ The `DB_Ontology` binding for the `sync_complex_terms` Worker is automatically kept in sync with the root configuration by `migrate.ts` when a new Ontology is created.
 
 ### Complex Terms
 

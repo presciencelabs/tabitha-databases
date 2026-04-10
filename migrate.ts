@@ -93,7 +93,12 @@ for (const cfg of configs) {
 
 	console.log(`Updating wrangler.jsonc with new ${cfg.key} database info...`)
 	const new_db_info = extract_new_db_info(cmd_output_new_db)
-	await update_deployment_config(new_db_info, `DB_${cfg.key}`)
+	await update_deployment_config('./wrangler.jsonc', new_db_info, `DB_${cfg.key}`)
+	
+	if (cfg.key === 'Ontology') {
+		console.log(`Syncing DB_Ontology binding to ontology/wrangler.jsonc...`)
+		await update_deployment_config('./ontology/wrangler.jsonc', new_db_info, `DB_${cfg.key}`)
+	}
 
 	console.log(`Deploying new ${cfg.key} data to D1...`)
 	await $`bun wrangler d1 execute ${d1_db_name} --file ${output_file}.sql --remote`.quiet()
@@ -170,8 +175,8 @@ function extract_new_db_info(output: string): D1_META {
 	return JSON.parse(output.match(JSON_OBJECT)?.[0]!).d1_databases[0]
 }
 
-async function update_deployment_config(new_db_info: D1_META, binding: string) {
-	const raw_cfg = await Bun.file('./wrangler.jsonc').text()
+async function update_deployment_config(config_path: string, new_db_info: D1_META, binding: string) {
+	const raw_cfg = await Bun.file(config_path).text()
 	const wrangler_cfg: any = parse(raw_cfg)
 
 	const index = wrangler_cfg.d1_databases.findIndex((db: D1_META) => db.binding === binding)
@@ -179,6 +184,6 @@ async function update_deployment_config(new_db_info: D1_META, binding: string) {
 		wrangler_cfg.d1_databases[index].database_name = new_db_info.database_name
 		wrangler_cfg.d1_databases[index].database_id = new_db_info.database_id
 
-		return Bun.write('./wrangler.jsonc', stringify(wrangler_cfg, null, 3))
+		return Bun.write(config_path, stringify(wrangler_cfg, null, 3))
 	}
 }
