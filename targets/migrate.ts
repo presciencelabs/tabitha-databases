@@ -6,11 +6,11 @@ import { migrate_lexical_forms } from './migrate_lexical_forms'
 import { migrate_lexicon_table } from './migrate_lexicon_table'
 import { migrate_text_table } from './migrate_text_table'
 import { transform_inflections } from './inflections/transform'
+import { basename } from 'path'
 
 // usage: `bun targets/migrate.ts databases/English_YYYY-MM-DD.tbta.sqlite databases/Targets_YYYY-MM-DD.tabitha.sqlite`
 const tbta_db_name = Bun.argv[2] 															// databases/English_YYYY-MM-DD.tbta.sqlite
-const BETWEEN_SLASH_AND_UNDERSCORE = new RegExp('/([^_]+)_')
-const project = tbta_db_name.match(BETWEEN_SLASH_AND_UNDERSCORE)?.[1] ?? '' 	// English
+const project = basename(tbta_db_name).split('_')[0] 	// English
 const targets_db_name = Bun.argv[3]															// databases/Targets_YYYY-MM-DD.tabitha.sqlite
 
 const tbta_db = new Database(tbta_db_name, { readwrite: true, create: false })

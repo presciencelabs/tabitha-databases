@@ -1,6 +1,7 @@
 import { $, Glob } from 'bun'
 import Database from 'bun:sqlite'
 import { cp, rename } from 'fs/promises'
+import { basename } from 'path'
 import wrangler_cfg from './wrangler.jsonc'
 
 if (!Bun.which('sqlite3')) {
@@ -81,13 +82,13 @@ for (const cfg of configs) {
 
 	const input_args = await cfg.migration_input_args()
 	const output_file = await cfg.migration_output_file()
-	await $`bun ${cfg.key.toLowerCase()}/migrate.ts ${input_args.join(' ')} ${output_file}`
+	await $`bun ${cfg.key.toLowerCase()}/migrate.ts ${input_args} ${output_file}`
 
 	console.log(`Creating dump of ${cfg.key} database...`)
 	await $`sqlite3 --escape off ${output_file} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${output_file}.sql`
 
 	console.log(`Creating new D1 database for ${cfg.key}...`)
-	const d1_db_name = output_file.match(/([^/]+)\.tabitha\.sqlite$/)?.[1] // => Sources_2025-10-22 or Ontology_9493_2025-10-22
+	const d1_db_name = basename(output_file, '.tabitha.sqlite') // => Sources_2025-10-22 or Ontology_9493_2025-10-22
 	const cmd_output_new_db = await $`bun wrangler d1 create ${d1_db_name}`.text()
 
 	console.log(`Updating wrangler.jsonc with new ${cfg.key} database info...`)
@@ -109,7 +110,7 @@ async function stage_tbta_files(working_dir: string) {
 
 	function stage(db_names: string[]): Promise<void>[] {
 		return db_names
-			.map(db_name => db_name.match(/([^/]+)\.sqlite$/)?.[1] ?? '') // e.g., ~/Downloads/2025-09-25/Bible.sqlite => Bible
+			.map(db_name => basename(db_name, '.sqlite')) // e.g., ~/Downloads/2025-09-25/Bible.sqlite => Bible
 			.filter(Boolean) // remove empty strings
 			.map(normalize_name)
 			.map(async ({ src, dest }) => await cp(src, dest))
