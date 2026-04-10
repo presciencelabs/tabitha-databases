@@ -27,7 +27,8 @@ export async function transform_inflections(dir: string = '.') {
 		console.log(`converting ${full_win_file} => ${full_unix_file}`)
 
 		const raw_content = await Bun.file(full_win_file).text()
-		// remove anything that is not: \x09 (tab), \x0A (newline), \x0D (carriage return), \x20-\x7E (printable ASCII)
+		// Sanitize raw TBTA file outputs by stripping out any corrupted bytes or non-printable ASCII characters 
+		// (this regex strictly retains tabs \x09, newlines \x0A, carriage returns \x0D, and visible text \x20-\x7E)
 		const cleaned_content = raw_content.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '')
 		await Bun.write(full_unix_file, cleaned_content)
 
@@ -49,7 +50,11 @@ export async function transform_inflections(dir: string = '.') {
 }
 
 function process_to_csv(content: string, part_of_speech: string): string {
+	// TBTA files are generated in a Windows environment resulting in '\r\n' line endings.
+	// If the invisible carriage return ('\r') is not stripped, it remains attached to the extracted
+	// word stem and breaks exact string matching downstream during the Lexicon DB migration.
 	const lines = content.replace(/\r/g, '').split('\n')
+	
 	const extracted_data = new Map<string, string[]>()
 	let current_key: string | null = null
 
