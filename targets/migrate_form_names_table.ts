@@ -81,14 +81,12 @@ function create_tabitha_table(targets_db: Database) {
 function load_data(targets_db: Database, project: string, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Form_Names table...`)
 
-	transformed_data.map(async ({part_of_speech, name, position}) => {
+	for (const {part_of_speech, name, position} of transformed_data) {
 		targets_db.run(`
 			INSERT INTO Form_Names (project, part_of_speech, name, position)
 			VALUES (?, ?, ?, ?)
 			`, [project, part_of_speech, name, position])
-
-		await Bun.write(Bun.stdout, '.')
-	})
+	}
 
 	console.log('done.')
 }
