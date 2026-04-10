@@ -49,7 +49,7 @@ export async function transform_inflections(dir: string = '.') {
 }
 
 function process_to_csv(content: string, part_of_speech: string): string {
-	const lines = content.split('\n')
+	const lines = content.replace(/\r/g, '').split('\n')
 	const extracted_data = new Map<string, string[]>()
 	let current_key: string | null = null
 
