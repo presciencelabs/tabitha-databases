@@ -83,14 +83,12 @@ function create_tabitha_table(targets_db: Database) {
 function load_data(targets_db: Database, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Lexicon table...`)
 
-	transformed_data.map(async ({id, project, stem, part_of_speech, gloss, features, constituents}) => {
+	for (const {id, project, stem, part_of_speech, gloss, features, constituents} of transformed_data) {
 		targets_db.run(`
 			INSERT INTO Lexicon (id, project, stem, part_of_speech, gloss, features, constituents)
 			VALUES (?, ?, ?, ?, ?, ?, ?)
 		`, [id, project, stem, part_of_speech, gloss.trim(), features, constituents])
-
-		await Bun.write(Bun.stdout, '.')
-	})
+	}
 
 	console.log('done.')
 }

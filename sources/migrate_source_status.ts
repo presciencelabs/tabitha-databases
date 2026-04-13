@@ -1,4 +1,5 @@
 import Database from 'bun:sqlite'
+import { Glob } from 'bun'
 
 type CommaSeparatedValues = string
 
@@ -81,9 +82,30 @@ function parse_verse_range(input: string): VerseRange {
 async function extract(csv_dir: string, date: string): Promise<VerseStatusRecord[]> {
 	console.log(`Getting verse statuses from the CSV files...`)
 
-	const filenames = [`OT_verse_status_${date}.csv`, `NT_verse_status_${date}.csv`]
+	async function get_latest_csv(prefix: string): Promise<string> {
+		const exact_file = Bun.file(`${csv_dir}/${prefix}_${date}.csv`)
+		if (await exact_file.exists()) {
+			return await exact_file.text()
+		}
 
-	const csv_contents_by_file = (await Promise.all(filenames.map(filename => Bun.file(`${csv_dir}/${filename}`).text())))
+		console.warn(`⚠️ Exact status file ${prefix}_${date}.csv not found. Searching for fallback...`)
+		const files = Array.from(new Glob(`${prefix}_*.csv`).scanSync(csv_dir))
+		files.sort() // Lexicographical sort will correctly order YYYY-MM-DD
+		const latest = files.pop()
+
+		if (!latest) {
+			throw new Error(`Critical Error: No fallback CSV found for ${prefix} in ${csv_dir}.`)
+		}
+		
+		console.log(`Fallback selected: ${latest}`)
+		return await Bun.file(`${csv_dir}/${latest}`).text()
+	}
+
+	const csv_contents_by_file = await Promise.all([
+		get_latest_csv('OT_verse_status'),
+		get_latest_csv('NT_verse_status')
+	])
+
 	const normalized_data = csv_contents_by_file.map(normalize).flat()
 
 	return normalized_data

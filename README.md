@@ -67,7 +67,7 @@ https://developers.cloudflare.com/workers/wrangler
 
 ### Ontology
 
-> ⚠️ Don't forget to update the `DB_Ontology` binding for the `sync_complex_terms` Worker when a new Ontology is created.
+> ℹ️ The `DB_Ontology` binding for the `sync_complex_terms` Worker is automatically kept in sync with the root configuration by `migrate.ts` when a new Ontology is created.
 
 ### Complex Terms
 
@@ -116,8 +116,13 @@ DB backups are handled via `wrangler` and stored in R2.  This is done via `.gith
 
 Merging into `main` will automatically make the workflow available on its schedule.
 
-## Local migrations
+## Manual Sub-Step Migrations
 
+> ℹ️ **Automated by default!**
+> The root `bun migrate.ts` orchestrator script automatically triggers all of these individual `sources`, `ontology`, and `targets` migrations in the correct order, creates the `.sql` dumps, and instantly deploys them. 
+> 
+> You only need to run these commands manually if you are debugging or need to run a localized piece of the pipeline in isolation.
+>
 > _order coupling_
 >
 > * Bible -> Sources -> Ontology

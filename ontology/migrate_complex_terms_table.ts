@@ -34,11 +34,9 @@ function create_tabitha_table(tabitha_db: Database) {
 function load_data(tabitha_db: Database, terms: ComplexTerm[]) {
 	console.log(`Loading data into Complex_Terms table...`)
 
-	terms.map(async ({ stem, sense, part_of_speech, structure, pairing, explication, ontology_status, level, notes }: ComplexTerm) => {
+	for (const { stem, sense, part_of_speech, structure, pairing, explication, ontology_status, level, notes } of terms) {
 		tabitha_db.run(INSERT_COMPLEX_TERMS_SQL, [stem, sense, part_of_speech, structure, pairing, explication, ontology_status, level, notes])
+	}
 
-		await Bun.write(Bun.stdout, '.')
-	})
-
-	console.log('done.')
+	console.log('\ndone.')
 }

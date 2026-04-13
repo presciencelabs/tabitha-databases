@@ -34,8 +34,11 @@ export const INSERT_COMPLEX_TERMS_SQL = `
 export function transform(rows: TabSeparatedValues[]): ComplexTerm[] {
 	return rows.map((row: TabSeparatedValues) => {
 		const [term, part_of_speech, structure, pairing, explication, ontology_status, level, notes] = row.split('\t')
+		// Splits the raw source string into a stem block and single-character uppercase sense block (e.g. "love-A" -> [stem: "love", sense: "A"])
 		const term_match = (term ?? '').trim().match(/^(.*)-([A-Z])$/)
 		const [stem, sense] = term_match ? [term_match[1], term_match[2]] : [term, '']
+
+		// Strips out purely numerical level values (e.g. "level 2" -> 2)
 		const level_match = (level ?? '').trim().match(/^level (\d)$/)
 		const level_int = level_match ? parseInt(level_match[1]) : -1
 

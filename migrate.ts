@@ -1,7 +1,8 @@
 import { $, Glob } from 'bun'
 import Database from 'bun:sqlite'
-import { rename } from 'fs/promises'
-import wrangler_cfg from './wrangler.jsonc'
+import { cp, rename } from 'fs/promises'
+import { basename } from 'path'
+import { parse, stringify } from 'comment-json'
 
 if (!Bun.which('sqlite3')) {
 	throw new Error('sqlite3 is not installed. Please install it and try again.')
@@ -14,10 +15,8 @@ const dir_w_tbta_dbs = Bun.argv[2] // "~/Downloads/TBTA 9-25-25"
 const date = Bun.argv[3] // 2025-09-25
 
 await stage_tbta_files(dir_w_tbta_dbs)
-const ls_output = await $`ls databases/*_${date}.tbta.sqlite`.text()
-const migration_dbs = ls_output
-	.split('\n')
-	.filter(Boolean) // remove empty strings
+const migration_dbs = Array.from(new Glob(`databases/*_${date}.tbta.sqlite`).scanSync('.'))
+
 
 type DbConfig = {
 	key: 'Sources' | 'Ontology' | 'Targets'
@@ -35,11 +34,13 @@ const configs: DbConfig[] = [
 					const match = migration_dbs.find(db => db.includes(name))
 					if (match) return match
 
-					const latest = (await $`ls -t databases/${name}_*.tbta.sqlite | head -n 1`.text()).trim()
+					const files = Array.from(new Glob(`databases/${name}_*.tbta.sqlite`).scanSync('.'))
+					files.sort() // lexicographical sort will serve correctly for YYYY-MM-DD
+					const latest = files.pop()
 
 					if (latest) console.log(`Source ${name} missing for ${date}, using: ${latest} instead.`)
 
-					return latest
+					return latest || ''
 				})
 			)
 
@@ -57,7 +58,7 @@ const configs: DbConfig[] = [
 			return [sources]
 		},
 		async migration_output_file() {
-			const ontology_db_name = (await $`ls databases/Ontology_*_${date}.tabitha.sqlite`.text()).trim()
+			const ontology_db_name = Array.from(new Glob(`databases/Ontology_*_${date}.tabitha.sqlite`).scanSync('.'))[0] || ''
 
 			return ontology_db_name
 		},
@@ -81,18 +82,23 @@ for (const cfg of configs) {
 
 	const input_args = await cfg.migration_input_args()
 	const output_file = await cfg.migration_output_file()
-	await $`bun ${cfg.key.toLowerCase()}/migrate.ts ${input_args.join(' ')} ${output_file}`
+	await $`bun ${cfg.key.toLowerCase()}/migrate.ts ${input_args} ${output_file}`
 
 	console.log(`Creating dump of ${cfg.key} database...`)
 	await $`sqlite3 --escape off ${output_file} .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > ${output_file}.sql`
 
 	console.log(`Creating new D1 database for ${cfg.key}...`)
-	const d1_db_name = output_file.match(/([^/]+)\.tabitha\.sqlite$/)?.[1] // => Sources_2025-10-22 or Ontology_9493_2025-10-22
+	const d1_db_name = basename(output_file, '.tabitha.sqlite') // => Sources_2025-10-22 or Ontology_9493_2025-10-22
 	const cmd_output_new_db = await $`bun wrangler d1 create ${d1_db_name}`.text()
 
 	console.log(`Updating wrangler.jsonc with new ${cfg.key} database info...`)
 	const new_db_info = extract_new_db_info(cmd_output_new_db)
-	await update_deployment_config(new_db_info, `DB_${cfg.key}`)
+	await update_deployment_config('./wrangler.jsonc', new_db_info, `DB_${cfg.key}`)
+	
+	if (cfg.key === 'Ontology') {
+		console.log(`Syncing DB_Ontology binding to ontology/wrangler.jsonc...`)
+		await update_deployment_config('./ontology/wrangler.jsonc', new_db_info, `DB_${cfg.key}`)
+	}
 
 	console.log(`Deploying new ${cfg.key} data to D1...`)
 	await $`bun wrangler d1 execute ${d1_db_name} --file ${output_file}.sql --remote`.quiet()
@@ -103,18 +109,16 @@ async function stage_tbta_files(working_dir: string) {
 		await rename(`${working_dir}/${file}`, `${working_dir}/${file.replace('.new', '.sqlite')}`)
 	}
 
-	const tbta_db_names = await $`ls ${working_dir}/*.sqlite`.text()
-	console.log('attempting to stage the following:', tbta_db_names)
-	await Promise.all(stage(tbta_db_names))
+	const sqlite_files = Array.from(new Glob('*.sqlite').scanSync(working_dir))
+	console.log('attempting to stage the following:', sqlite_files)
+	await Promise.all(stage(sqlite_files))
 
-	function stage(db_names: string): Promise<$.ShellOutput>[] {
+	function stage(db_names: string[]): Promise<void>[] {
 		return db_names
-			.split('\n')
-			.filter(Boolean)
-			.map(db_name => db_name.match(/([^/]+)\.sqlite$/)?.[1] ?? '') // ~/Downloads/2025-09-25/Bible.sqlite => Bible
+			.map(db_name => basename(db_name, '.sqlite')) // e.g., ~/Downloads/2025-09-25/Bible.sqlite => Bible
 			.filter(Boolean) // remove empty strings
 			.map(normalize_name)
-			.map(async ({ src, dest }) => await $`cp ${src} ${dest}`)
+			.map(async ({ src, dest }) => await cp(src, dest))
 	}
 
 	function normalize_name(name: string) {
@@ -128,9 +132,11 @@ async function stage_tbta_files(working_dir: string) {
 		return { src, dest }
 
 		function derive_ontology_name() {
-			const ontology = new Database(src, { readwrite: true, create: false })
+			const ontology = new Database(src, { readonly: true, create: false })
 
 			const { version } = ontology.query('SELECT version FROM Version').get() as { version: string }
+
+			ontology.close()
 
 			const minor_version = version.split('.').at(-1) // 3.0.9493 => 9493
 
@@ -169,10 +175,15 @@ function extract_new_db_info(output: string): D1_META {
 	return JSON.parse(output.match(JSON_OBJECT)?.[0]!).d1_databases[0]
 }
 
-function update_deployment_config(new_db_info: D1_META, binding: string) {
-	const index = wrangler_cfg.d1_databases.findIndex((db: D1_META) => db.binding === binding)
-	wrangler_cfg.d1_databases[index].database_name = new_db_info.database_name
-	wrangler_cfg.d1_databases[index].database_id = new_db_info.database_id
+async function update_deployment_config(config_path: string, new_db_info: D1_META, binding: string) {
+	const raw_cfg = await Bun.file(config_path).text()
+	const wrangler_cfg: any = parse(raw_cfg)
 
-	return Bun.write('./wrangler.jsonc', JSON.stringify(wrangler_cfg, null, 3))
+	const index = wrangler_cfg.d1_databases.findIndex((db: D1_META) => db.binding === binding)
+	if (index !== -1) {
+		wrangler_cfg.d1_databases[index].database_name = new_db_info.database_name
+		wrangler_cfg.d1_databases[index].database_id = new_db_info.database_id
+
+		return Bun.write(config_path, stringify(wrangler_cfg, null, 3))
+	}
 }

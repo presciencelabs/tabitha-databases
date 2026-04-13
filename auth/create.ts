@@ -10,7 +10,7 @@ console.log('done.')
 
 function create_user_table(db: Database) {
 	console.log('Creating Users table...')
-	db.run('DROP TABLE Users')
+	db.run('DROP TABLE IF EXISTS Users')
 
 	db.run(`
 		CREATE TABLE IF NOT EXISTS Users (
@@ -22,6 +22,7 @@ function create_user_table(db: Database) {
 
 function create_permissions_table(db: Database) {
 	console.log('Creating Permissions table...')
+	db.run('DROP TABLE IF EXISTS Permissions')
 	db.run(`
 		CREATE TABLE IF NOT EXISTS Permissions (
 			id				INTEGER PRIMARY KEY,
@@ -30,7 +31,7 @@ function create_permissions_table(db: Database) {
 		)
 	`)
 
-	const insert = db.prepare('INSERT INTO Permissions (id, app, permission) VALUES (?, ?, ?)');
+	const insert = db.prepare('INSERT OR REPLACE INTO Permissions (id, app, permission) VALUES (?, ?, ?)');
 	const insertMany = db.transaction((permissions) => {
 		for (const permission of permissions) {
 			insert.run(...permission)
@@ -47,6 +48,7 @@ function create_permissions_table(db: Database) {
 
 function create_user_permissions_table(db: Database) {
 	console.log('Creating User_Permissions table...')
+	db.run('DROP TABLE IF EXISTS User_Permissions')
 	db.run(`
 		CREATE TABLE IF NOT EXISTS User_Permissions (
 			user_email	TEXT,
