@@ -1,28 +1,28 @@
 # TaBiThA databases
 
-https://www.sqlite.org
+<https://www.sqlite.org>
 
 ## Interacting with a database locally
 
 ### GUI
 
-https://sqlitebrowser.org has been a good tool and it's free
+<https://sqlitebrowser.org> has been a good tool and it's free
 
 ### Command line
 
-`sqlite3` is needed, thankfully for Mac users it's already installed, otherwise:  https://www.sqlite.org/download.html
+`sqlite3` is needed, thankfully for Mac users it's already installed, otherwise:  <https://www.sqlite.org/download.html>
 
 #### Getting help
 
 ##### Interactive
 
 1. `sqlite3`
-1. `sqlite> .help` *https://www.sqlite.org/cli.html#special_commands_to_sqlite3_dot_commands_*
+1. `sqlite> .help` *<https://www.sqlite.org/cli.html#special_commands_to_sqlite3_dot_commands>_*
 1. `^d` to exit shell
 
 ##### Man page
 
-https://www.sqlite.org/cli.html#command_line_options
+<https://www.sqlite.org/cli.html#command_line_options>
 `sqlite3 -help`
 
 ### Dump
@@ -31,14 +31,14 @@ https://www.sqlite.org/cli.html#command_line_options
 
 ### Diffing to understand changes
 
-Databases can be diffed using sqldiff (https://www.sqlite.org/sqldiff.html), Mac users `brew install sqldiff`
+Databases can be diffed using sqldiff (<https://www.sqlite.org/sqldiff.html>), Mac users `brew install sqldiff`
 
 ## Hosting service
 
-https://developers.cloudflare.com/d1
-https://developers.cloudflare.com/workers/wrangler/commands/#d1
+<https://developers.cloudflare.com/d1>
+<https://developers.cloudflare.com/workers/wrangler/commands/#d1>
 
-https://developers.cloudflare.com/workers/wrangler
+<https://developers.cloudflare.com/workers/wrangler>
 
 ### Create database
 
@@ -59,9 +59,11 @@ https://developers.cloudflare.com/workers/wrangler
 
 > ⚠️ **Migration Prerequisites:**
 > Before running the migrate command, ensure you have:
+>
 > * A directory containing the necessary TBTA databases (`Bible.sqlite`, `English.sqlite`, `Ontology.[sqlite|new]`, and `Sample.sqlite`).
-> * The updated inflections in `./targets/inflections/csv`.
-> * The `./databases/Sources_Complex_YYYY-MM-DD.tabitha.sqlite` database.
+> * The updated inflections in `./targets/inflections/csv`. (see targets/inflections/README.md)
+> * The `./databases/Sources_Complex_YYYY-MM-DD.tabitha.sqlite` database. (created by running the following command in the TBTA folder: `./tbta_utils --export-generated-cci --language English.sqlite --audience-name "Unchurched Adults" Sources_Complex_YYYY-MM-DD.tabitha.sqlite` and moving it to `./databases/`)
+> * The updated verse status files in `./sources/status`. (see sources/status/README.md)
 
 `bun migrate.ts <directory containing all necessary TBTA dbs> YYYY-MM-DD`
 
@@ -108,7 +110,7 @@ DB backups are handled via `wrangler` and stored in R2.  This is done via `.gith
 
 `cp db_backup/.env.example .env` and populate with a valid tokens
 
-> ⚠️ exports will **BLOCK** the database so you might want to tweak the __get_latest_database_name()__ logic during testing to "find" a database that is not currently the production version.
+> ⚠️ exports will **BLOCK** the database so you might want to tweak the **get_latest_database_name()** logic during testing to "find" a database that is not currently the production version.
 
 `bun run db_backup/index.ts`
 
@@ -119,11 +121,11 @@ Merging into `main` will automatically make the workflow available on its schedu
 ## Manual Sub-Step Migrations
 
 > ℹ️ **Automated by default!**
-> The root `bun migrate.ts` orchestrator script automatically triggers all of these individual `sources`, `ontology`, and `targets` migrations in the correct order, creates the `.sql` dumps, and instantly deploys them. 
-> 
+> The root `bun migrate.ts` orchestrator script automatically triggers all of these individual `sources`, `ontology`, and `targets` migrations in the correct order, creates the `.sql` dumps, and instantly deploys them.
+>
 > You only need to run these commands manually if you are debugging or need to run a localized piece of the pipeline in isolation.
 >
-> _order coupling_
+> *order coupling*
 >
 > * Bible -> Sources -> Ontology
 > * Inflections -> English -> Targets
