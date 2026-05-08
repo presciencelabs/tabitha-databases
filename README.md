@@ -75,13 +75,13 @@ Databases can be diffed using sqldiff (<https://www.sqlite.org/sqldiff.html>), M
 
 Complex terms will be updated from the "How to" spreadsheet to the database on a regular schedule.
 
-#### Testing locally
+#### Testing Complex Terms locally
 
 `bun wrangler --config ontology/wrangler.jsonc dev --test-scheduled`
 
  Hit `curl 'http://localhost.tabitha.bible:8787/__scheduled'` in a separate terminal to run it.
 
-#### Deployment
+#### Deploying Complex Terms
 
 1. Ensure the correct database binding is set in `ontology/wrangler.jsonc`
 1. Commit and push, deployment will occur automatically
@@ -106,7 +106,7 @@ This database should not need to be deployed on a regular basis.  Updates will e
 
 DB backups are handled via `wrangler` and stored in R2.  This is done via `.github/workflows/db_backup.yml`
 
-#### Testing locally
+#### Testing DB backups locally
 
 `cp db_backup/.env.example .env` and populate with a valid tokens
 
@@ -114,7 +114,7 @@ DB backups are handled via `wrangler` and stored in R2.  This is done via `.gith
 
 `bun run db_backup/index.ts`
 
-#### Deployment
+#### Deploying DB backups
 
 Merging into `main` will automatically make the workflow available on its schedule.
 
@@ -130,39 +130,39 @@ Merging into `main` will automatically make the workflow available on its schedu
 > * Bible -> Sources -> Ontology
 > * Inflections -> English -> Targets
 
-### Sources
+### Sources Migration
 
-#### Create the TaBiThA database from the TBTA version
+#### Create the Sources database
 
 `bun sources/migrate.ts databases/Bible_YYYY-MM-DD.tbta.sqlite databases/Community_Development_Texts_YYYY-MM-DD.tbta.sqlite databases/Grammar_Introduction_YYYY-MM-DD.tbta.sqlite databases/Sources_YYYY-MM-DD.tabitha.sqlite`
 
-#### Dump to a `.sql` file
+#### Dump Sources to a `.sql` file
 
 `sqlite3 --escape off databases/Sources_YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Sources_YYYY-MM-DD.tabitha.sqlite.sql`
 
-### Ontology
+### Ontology Migration
 
-#### Create the TaBiThA database from the TBTA version
+#### Create the Ontology database
 
 `bun ontology/migrate.ts databases/Ontology_VERSION_YYYY-MM-DD.tbta.sqlite databases/Sources_YYYY-MM-DD.tabitha.sqlite databases/Ontology_VERSION_YYYY-MM-DD.tabitha.sqlite`
 
-#### Dump to a `.sql` file
+#### Dump Ontology to a `.sql` file
 
 `sqlite3 --escape off databases/Ontology_VERSION_YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Ontology_VERSION_YYYY-MM-DD.tabitha.sqlite.sql`
 
-### Targets
+### Targets Migration
 
-#### Create the TaBiThA database from the TBTA version
+#### Create the Targets database
 
 > ⚠️ Ensure the inflections have already been exported using the corresponding set of TBTA files, see `./targets/inflections/README.md` for instructions (must be done manually).
 
 `bun targets/migrate.ts databases/English_YYYY-MM-DD.tbta.sqlite databases/Targets_YYYY-MM-DD.tabitha.sqlite`
 
-#### Dump to a `.sql` file
+#### Dump Targets to a `.sql` file
 
 `sqlite3 --escape off databases/Targets_YYYY-MM-DD.tabitha.sqlite .dump | grep -Ev "^PRAGMA|^BEGIN TRANSACTION|^COMMIT" > databases/Targets_YYYY-MM-DD.tabitha.sqlite.sql`
 
-### Auth
+### Auth Creation
 
 If needed, the database can be recreated using `bun auth/create.ts`
 
