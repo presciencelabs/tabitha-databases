@@ -12,9 +12,9 @@ in "take" and that stem has a chance to be found.
 
 1. Drop `./tbta_utils` into an up-to-date `TBTA` dir
 
-!!!!!!!   TODO: tbta_utils is currently available for all target platforms, these instructions should be updated to get those from the appropriate directy as well as the usage !!!!!!!
+!!!!!!!   TODO: tbta_utils is currently available for all target platforms, these instructions should be updated to get those from the appropriate directory as well as the usage !!!!!!!
 
-1. Run `tbta_utils --export-lexical-forms <output directory>`
+1. Run `tbta_utils --export-lexical-forms --language English <output directory>`
 1. Place all `*.win.txt` files into the `win` directory
 1. run `bun transform.ts` (This is also run automatically during the `targets/migrate.ts` migration)
 
