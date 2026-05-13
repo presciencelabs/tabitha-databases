@@ -36,7 +36,7 @@ const status_mapping: Record<InputStatus, SourceStatus> = {
 	'Phase 2': 'Initial Analysis Complete',
 	'Completed This Period': 'Initial Analysis Complete',
 	'Phase 3 (POLISHING)': 'Final Review in Progress',
-	'Polish 2nd Language': 'Ready to Translate',
+	'Polish 2nd Language': 'Final Review in Progress',
 	'Complete': 'Ready to Translate',
 	'Previously Complete': 'Ready to Translate'
 }
