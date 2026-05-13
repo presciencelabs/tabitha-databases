@@ -10,17 +10,17 @@
       {
          "binding": "DB_Ontology",
          "database_name": "Ontology_9494_2026-04-29",
-         "database_id": "63e2ba82-de19-41a3-8c92-4dea384dbd09"
+         "database_id": "0b5dd62e-4b19-4714-866e-41279877f91f"
       },
       {
          "binding": "DB_Sources",
          "database_name": "Sources_2026-04-29",
-         "database_id": "f8f26d77-5975-4db2-a262-1cfb68490d9f"
+         "database_id": "d6afced9-9a1c-4f31-a512-e32ac3f84e69"
       },
       {
          "binding": "DB_Targets",
          "database_name": "Targets_2026-04-29",
-         "database_id": "ff4439e1-689e-49a4-b5a2-e7f934929eca"
+         "database_id": "275ff209-99c1-4f8b-8adb-c93438db94cd"
       }
    ]
 }
