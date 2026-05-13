@@ -7,8 +7,8 @@ type VerseRange = {
 	type: string
 	id_primary: string
 	id_secondary: string
-	id_tertiary_start: number|null
-	id_tertiary_end: number|null
+	id_tertiary_start: number | null
+	id_tertiary_end: number | null
 }
 
 type VerseStatusRecord = {
@@ -36,7 +36,7 @@ const status_mapping: Record<InputStatus, SourceStatus> = {
 	'Phase 2': 'Initial Analysis Complete',
 	'Completed This Period': 'Initial Analysis Complete',
 	'Phase 3 (POLISHING)': 'Final Review in Progress',
-	'Polish 2nd Language': 'Ready to Translate',
+	'Polish 2nd Language': 'Final Review in Progress',
 	'Complete': 'Ready to Translate',
 	'Previously Complete': 'Ready to Translate'
 }
@@ -96,7 +96,7 @@ async function extract(csv_dir: string, date: string): Promise<VerseStatusRecord
 		if (!latest) {
 			throw new Error(`Critical Error: No fallback CSV found for ${prefix} in ${csv_dir}.`)
 		}
-		
+
 		console.log(`Fallback selected: ${latest}`)
 		return await Bun.file(`${csv_dir}/${latest}`).text()
 	}
@@ -110,14 +110,23 @@ async function extract(csv_dir: string, date: string): Promise<VerseStatusRecord
 
 	return normalized_data
 
+	/**
+	 * CSV format from Google Data Studio:
+	 * 
+	 * ProjectStatusDate,StatusDetail,ProjectName,VerseCount
+	 * "May 1, 2026, 12:00:00 AM",Complete,Matthew 1:1-17,17
+	 * "May 1, 2026, 12:00:00 AM",Complete,Matthew 1:18-25,8
+	 */
 	function normalize(csv_text: string): VerseStatusRecord[] {
-		return csv_text.split(/\r?\n/)
-			.slice(1)		// skip the header row
+		const lines = csv_text.split(/\r?\n/)
+
+		return lines.slice(1)		// skip the header row
 			.filter(line => line !== '')
-			.map(transform)
+			.map(row => transform(row))
 
 		function transform(row: CommaSeparatedValues): VerseStatusRecord {
-			const [csv_status, verse_range] = row.split(',')
+			const without_date = row.slice(row.indexOf('",') + 2) // "May 1, 2026, 12:00:00 AM",Complete,Matthew 1:1-17,17 => Complete,Matthew 1:1-17,17
+			const [csv_status, verse_range] = without_date.split(',')
 			const range = parse_verse_range(verse_range ?? '')
 			const status = status_mapping[csv_status as InputStatus] ?? 'Not Started'
 			return { range, status }

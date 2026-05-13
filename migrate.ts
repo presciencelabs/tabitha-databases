@@ -94,7 +94,7 @@ for (const cfg of configs) {
 	console.log(`Updating wrangler.jsonc with new ${cfg.key} database info...`)
 	const new_db_info = extract_new_db_info(cmd_output_new_db)
 	await update_deployment_config('./wrangler.jsonc', new_db_info, `DB_${cfg.key}`)
-	
+
 	if (cfg.key === 'Ontology') {
 		console.log(`Syncing DB_Ontology binding to ontology/wrangler.jsonc...`)
 		await update_deployment_config('./ontology/wrangler.jsonc', new_db_info, `DB_${cfg.key}`)
@@ -132,13 +132,17 @@ async function stage_tbta_files(working_dir: string) {
 		return { src, dest }
 
 		function derive_ontology_name() {
-			const ontology = new Database(src, { readonly: true, create: false })
+			const ontology = new Database(src, { readwrite: true, create: false })
 
-			const { version } = ontology.query('SELECT version FROM Version').get() as { version: string }
+			const row = ontology.query('SELECT version FROM Version').get() as { version: string } | null
+			if (!row?.version) {
+				throw new Error('Version table query returned no row or an empty version.')
+			}
 
-			ontology.close()
-
-			const minor_version = version.split('.').at(-1) // 3.0.9493 => 9493
+			const minor_version = row.version.split('.').at(-1) // 3.0.9493 => 9493
+			if (!minor_version) {
+				throw new Error(`Could not derive minor version from "${row.version}".`)
+			}
 
 			return `./databases/Ontology_${minor_version}_${date}.tabitha.sqlite`
 		}

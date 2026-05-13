@@ -1,24 +1,24 @@
 {
-	"$schema": "../node_modules/wrangler/config-schema.json",
-	"name": "sync_complex_terms",
-	"main": "sync_complex_terms_worker.ts",
-	"compatibility_date": "2026-02-05",
-	"workers_dev": false,
-	"triggers": {
-		"crons": [
-			"0 */12 * * *"
-		]
-	},
-	"d1_databases": [
-		{
-			"binding": "DB_Ontology",
-			"database_name": "Ontology_9494_2026-04-09",
-			"database_id": "22029b4b-8a86-459c-988e-830bf9be74a4"
-		}
-	],
-	"observability": {
-		"logs": {
-			"enabled": true
-		}
-	}
+   "$schema": "../node_modules/wrangler/config-schema.json",
+   "name": "sync_complex_terms",
+   "main": "sync_complex_terms_worker.ts",
+   "compatibility_date": "2026-02-05",
+   "workers_dev": false,
+   "triggers": {
+      "crons": [
+         "0 */12 * * *"
+      ]
+   },
+   "d1_databases": [
+      {
+         "binding": "DB_Ontology",
+         "database_name": "Ontology_9494_2026-04-29",
+         "database_id": "0b5dd62e-4b19-4714-866e-41279877f91f"
+      }
+   ],
+   "observability": {
+      "logs": {
+         "enabled": true
+      }
+   }
 }
