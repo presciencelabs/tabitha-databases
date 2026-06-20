@@ -16,6 +16,15 @@ type VerseStatusRecord = {
 	status: SourceStatus
 }
 
+type StatusTally = {
+	not_started_count: number
+	in_progress_count: number
+	initial_complete_count: number
+	review_count: number
+	ready_count: number
+	total_count: number
+}
+
 type InputStatus = 'Not Started' | 'STACK'
 	| 'Drafter [HE1]' | 'First Review' | 'Second Review' | 'Checker [HE2>EBT]'
 	| 'Zoho > ParaText' | 'Consultant' | 'Holding' | 'Phase 2'
@@ -42,9 +51,12 @@ const status_mapping: Record<InputStatus, SourceStatus> = {
 }
 
 export async function migrate_source_status(sources_db: Database, csv_dir: string, date: string): Promise<void> {
-	const word_forms = await extract(csv_dir, date)
+	const verse_statuses = await extract(csv_dir, date)
 
-	await load_data(word_forms, sources_db)
+	await update_verse_status(verse_statuses, sources_db)
+
+	create_chapter_status_table(sources_db)
+	await populate_chapter_status_table(sources_db, verse_statuses)
 }
 
 /**
@@ -72,7 +84,7 @@ function parse_verse_range(input: string): VerseRange {
 
 	return {
 		type: 'Bible',
-		id_primary: id_primary.trim(),
+		id_primary: id_primary.trim() === 'Psalm' ? 'Psalms' : id_primary.trim(),	// our Source uses 'Psalms' but the status data uses 'Psalm'
 		id_secondary: id_secondary || '1',		// books like Jude only have one chapter, so default to "1" if no chapter is specified
 		id_tertiary_start: id_tertiary_start ? parseInt(id_tertiary_start) : null,
 		id_tertiary_end: id_tertiary_end ? parseInt(id_tertiary_end) : null,
@@ -134,7 +146,7 @@ async function extract(csv_dir: string, date: string): Promise<VerseStatusRecord
 	}
 }
 
-async function load_data(verse_statuses: VerseStatusRecord[], sources_db: Database): Promise<void> {
+async function update_verse_status(verse_statuses: VerseStatusRecord[], sources_db: Database): Promise<void> {
 	console.log(`Loading verse statuses into Sources table...`)
 
 	for (const { range, status } of verse_statuses) {
@@ -164,4 +176,82 @@ async function load_data(verse_statuses: VerseStatusRecord[], sources_db: Databa
 	}
 
 	console.log('done.')
+}
+
+function create_chapter_status_table(sources_db: Database) {
+	console.log(`Prepping ChapterStatus table in ${sources_db.filename}...`)
+
+	sources_db.run(`
+		CREATE TABLE IF NOT EXISTS ChapterStatus (
+			'type', -- e.g., Bible, Grammar Introduction, Community Development Texts
+			'id_primary', -- for Bible, this would hold the book name, e.g., Genesis
+			'id_secondary', -- for Bible, this would hold the chapter, e.g., 1
+			'status'
+		)
+	`)
+
+	sources_db.run(`
+		DELETE FROM ChapterStatus
+	`)
+
+	console.log('done.')
+
+	return sources_db
+}
+
+async function populate_chapter_status_table(sources_db: Database, verse_statuses: VerseStatusRecord[]) {
+	console.log(`Loading chapter statuses into ChapterStatus table...`)
+
+	const by_chapter = Map.groupBy(verse_statuses, ({ range: { type, id_primary, id_secondary } }) => JSON.stringify({ type, id_primary, id_secondary }))
+
+	for (const [chapter_ref, statuses] of by_chapter.entries()) {
+		const status_tally: StatusTally = statuses.reduce(tally_statuses, {
+			not_started_count: 0,
+			in_progress_count: 0,
+			initial_complete_count: 0,
+			review_count: 0,
+			ready_count: 0,
+			total_count: 0,
+		})
+		const chapter_status = get_status_from_tally(status_tally)
+		const { type, id_primary, id_secondary } = JSON.parse(chapter_ref) as VerseRange
+
+		sources_db.run(`
+			INSERT INTO ChapterStatus
+			VALUES (?, ?, ?, ?)
+		`, [type, id_primary, id_secondary, chapter_status])
+
+		await Bun.write(Bun.stdout, '.')
+	}
+
+	console.log('done.')
+
+	function tally_statuses(tally: StatusTally, { status }: VerseStatusRecord): StatusTally {
+		if (status === 'Not Started') {
+			tally.not_started_count += 1
+		} else if (status === 'Initial Analysis in Progress') {
+			tally.in_progress_count += 1
+		} else if (status === 'Initial Analysis Complete') {
+			tally.initial_complete_count += 1
+		} else if (status === 'Final Review in Progress') {
+			tally.review_count += 1
+		} else if (status === 'Ready to Translate') {
+			tally.ready_count += 1
+		}
+		tally.total_count += 1
+		return tally
+	}
+
+	function get_status_from_tally(status_tally: StatusTally): SourceStatus {
+		const status_count_mapping: [(tally: StatusTally) => boolean, SourceStatus][] = [
+			[({ total_count, ready_count }) => total_count === ready_count, 'Ready to Translate'],
+			[({ total_count, not_started_count }) => total_count === not_started_count, 'Not Started'],
+			[({ not_started_count }) => not_started_count > 0, 'Initial Analysis in Progress'],
+			[({ in_progress_count }) => in_progress_count > 0, 'Initial Analysis in Progress'],
+			[({ review_count }) => review_count > 0, 'Final Review in Progress'],
+			[() => true, 'Initial Analysis Complete'],
+		]
+
+		return status_tally ? status_count_mapping.find(([predicate]) => predicate(status_tally))![1] : 'Not Started'
+	}
 }
