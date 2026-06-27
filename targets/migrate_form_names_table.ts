@@ -34,8 +34,8 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 					FieldName
 
 		  FROM	LexicalFormNames
-				INNER JOIN	SyntacticCategories
-				ON				SyntacticCategory = SyntacticCategories.ID
+				INNER JOIN SyntacticCategories
+				ON SyntacticCategory = SyntacticCategories.ID
 
 		  ORDER BY SyntacticCategory
 	  `
@@ -49,7 +49,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	function transform(): TransformedData[] {
 		console.log(`Transforming data from ${tbta_db.filename}...`)
 
-		const transformed_data = extracted_data.map(({part_of_speech, name, FieldName}) => ({
+		const transformed_data = extracted_data.map(({ part_of_speech, name, FieldName }) => ({
 			part_of_speech,
 			name,
 			position: Number(FieldName.match(/(\d+)/)?.[1] ?? 0), // FieldName pattern:  "Form Name 1", "Form Name 2", etc.
@@ -68,8 +68,8 @@ function create_tabitha_table(targets_db: Database) {
 		CREATE TABLE IF NOT EXISTS Form_Names (
 			project			TEXT,
 			part_of_speech	TEXT,
-			name				TEXT,
-			position			INTEGER
+			name			TEXT,
+			position		INTEGER
 		)
 	`)
 
@@ -81,7 +81,7 @@ function create_tabitha_table(targets_db: Database) {
 function load_data(targets_db: Database, project: string, transformed_data: TransformedData[]) {
 	console.log(`Loading data into Form_Names table...`)
 
-	for (const {part_of_speech, name, position} of transformed_data) {
+	for (const { part_of_speech, name, position } of transformed_data) {
 		targets_db.run(`
 			INSERT INTO Form_Names (project, part_of_speech, name, position)
 			VALUES (?, ?, ?, ?)

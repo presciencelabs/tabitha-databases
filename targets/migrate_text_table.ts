@@ -31,7 +31,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 			FROM sqlite_master
 			WHERE type = 'table'
 				AND name like 'Target_EB_%'
-		`).all().map(({name}) => name)
+		`).all().map(({ name }) => name)
 
 		console.log('done.')
 
@@ -69,8 +69,8 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 
 		return transformed_data
 
-		function transform({Reference, Verse}: DbRow): TransformedData[] {
-			if (! Verse) return []
+		function transform({ Reference, Verse }: DbRow): TransformedData[] {
+			if (!Verse) return []
 
 			// References are expected to look like this: "Daniel 3:9"
 			const [, book, chapter, verse] = /(.*) (\d+):(\d+)/.exec(Reference) ?? []
@@ -91,16 +91,16 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 }
 
 function create_tabitha_table(targets_db: Database) {
-	console.log(`Creating Text table in ${targets_db.filename}...`)
+	console.log(`Creating the "Text" table in ${targets_db.filename} if it does not already exist...`)
 
 	targets_db.run(`
 		CREATE TABLE IF NOT EXISTS Text (
-			project	TEXT,
-			book 		TEXT,
-			chapter 	INTEGER,
-			verse 	INTEGER,
+			project		TEXT,
+			book		TEXT,
+			chapter		INTEGER,
+			verse		INTEGER,
 			audience	TEXT,
-			text 		TEXT
+			text		TEXT
 		)
 	`)
 
@@ -110,9 +110,9 @@ function create_tabitha_table(targets_db: Database) {
 }
 
 function load_data(targets_db: Database, project: string, transformed_data: TransformedData[]) {
-	console.log(`Loading data into Text table...`)
+	console.log(`Loading ${project} data into the "Text" table...`)
 
-	transformed_data.map(async ({book, chapter, verse, audience, text }) => {
+	transformed_data.map(async ({ book, chapter, verse, audience, text }) => {
 		targets_db.run(`
 			INSERT INTO Text (project, book, chapter, verse, audience, text)
 			VALUES (?, ?, ?, ?, ?, ?)
