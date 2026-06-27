@@ -3,7 +3,7 @@ import Database from 'bun:sqlite'
 export function migrate_source_features_table(tbta_db: Database, project: string, targets_db: Database) {
 	const transformed_data = transform_tbta_data(tbta_db)
 
-	create_tabitha_table(targets_db)
+	create_tabitha_table(targets_db, project)
 
 	load_data(targets_db, project, transformed_data)
 }
@@ -137,24 +137,22 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	}
 }
 
-function create_tabitha_table(tabitha_sources_db: Database) {
-	console.log(`Prepping Source_Features table in ${tabitha_sources_db.filename}...`)
+function create_tabitha_table(tabitha_sources_db: Database, project: string) {
+	console.log(`Prepping the "Source_Features" table for ${project} in ${tabitha_sources_db.filename}...`)
 
 	tabitha_sources_db.run(`
 		CREATE TABLE IF NOT EXISTS Source_Features (
 			project		TEXT,
-			category		TEXT,		-- the name of the category this feature is associated with
+			category	TEXT,		-- the name of the category this feature is associated with
 			feature		TEXT,		-- the name of the feature
-			position		INTEGER,	-- the index/position of the feature within the semantic representation
-			code			TEXT,		-- the letter used in the semantic representation, associated with a specific value
-			value			TEXT,		-- the display text for this value
+			position	INTEGER,	-- the index/position of the feature within the semantic representation
+			code		TEXT,		-- the letter used in the semantic representation, associated with a specific value
+			value		TEXT,		-- the display text for this value
 			example		TEXT
 		)
 	`)
 
-	tabitha_sources_db.run(`
-		DELETE FROM Source_Features
-	`)
+	tabitha_sources_db.run(`DELETE FROM Source_Features WHERE project = ?`, [project])
 
 	console.log('done.')
 
@@ -162,9 +160,9 @@ function create_tabitha_table(tabitha_sources_db: Database) {
 }
 
 function load_data(targets_db: Database, project: string, transformed_data: TransformedData[]) {
-	console.log(`Loading data into Source_Features table...`)
+	console.log(`Loading ${project} data into the "Source_Features" table...`)
 
-	transformed_data.map(async ({category, feature, position, code, value, example}) => {
+	transformed_data.map(async ({ category, feature, position, code, value, example }) => {
 		targets_db.run(`
 			INSERT INTO Source_Features (project, category, feature, position, code, value, example)
 			VALUES (?, ?, ?, ?, ?, ?, ?)
