@@ -17,7 +17,6 @@ const date = Bun.argv[3] // 2025-09-25
 await stage_tbta_files(dir_w_tbta_dbs)
 const migration_dbs = Array.from(new Glob(`databases/*_${date}.tbta.sqlite`).scanSync('.'))
 
-
 type DbConfig = {
 	key: 'Sources' | 'Ontology' | 'Targets'
 	migration_input_args(): Promise<string[]>
@@ -66,10 +65,15 @@ const configs: DbConfig[] = [
 	{
 		key: 'Targets',
 		async migration_input_args() {
-			const english = migration_dbs.find(name => name.includes('English') && name.endsWith('.tbta.sqlite'))
-			if (!english) throw new Error(`English database not found for ${this.key} migration.`)
+			const projects = migration_dbs.filter(db =>
+				['English', 'Swahili', 'Indonesian', 'Tagalog'].some(name => db.includes(name))
+			)
 
-			return [english]
+			if (!projects.some(db => db.includes('English'))) {
+				throw new Error(`English database not found for ${this.key} migration.`)
+			}
+
+			return projects
 		},
 		async migration_output_file() {
 			return `databases/${this.key}_${date}.tabitha.sqlite`
@@ -82,6 +86,7 @@ for (const cfg of configs) {
 
 	const input_args = await cfg.migration_input_args()
 	const output_file = await cfg.migration_output_file()
+
 	await $`bun ${cfg.key.toLowerCase()}/migrate.ts ${input_args} ${output_file}`
 
 	console.log(`Creating dump of ${cfg.key} database...`)
