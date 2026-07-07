@@ -62,7 +62,7 @@ Databases can be diffed using sqldiff (<https://www.sqlite.org/sqldiff.html>), M
 >
 > * A directory containing the necessary TBTA databases (`Bible.sqlite`, `English.sqlite`, `Ontology.[sqlite|new]`, and `Sample.sqlite`).
 > * The updated inflections in `./targets/inflections/csv`. (see targets/inflections/README.md)
-> * The `./databases/Sources_Complex_YYYY-MM-DD.tabitha.sqlite` database. (created by running the following command in the TBTA folder: `./tbta_utils --export-generated-cci --language English.sqlite --audience-name "Unchurched Adults" Sources_Complex_YYYY-MM-DD.tabitha.sqlite` and moving it to `./databases/`)
+> * The `./databases/Sources_Complex_YYYY-MM-DD.tabitha.sqlite` database. (created by running the following command in the TBTA folder where all the files live: `./tbta-utils export-generated-cci --language English.sqlite --audience-name "Unchurched Adults" --output-path Sources_Complex_YYYY-MM-DD.tabitha.sqlite` and moving it to `tabitha-databases/databases/`)
 > * The updated verse status files in `./sources/status`. (see sources/status/README.md)
 
 `bun migrate.ts <directory containing all necessary TBTA dbs> YYYY-MM-DD`
