@@ -77,7 +77,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 
 			// Each audience text is separated on its own line, and may or may not be followed by annotated text marked with '~!~'
 			// A line may be blank if there is no saved text for that audience
-			const audience_texts = Verse.split('\n').map(audience_text => audience_text.split('~!~')[0])
+			const audience_texts = Verse.split('\n').map(audience_text => audience_text.split('~!~')[0].trim())
 
 			return audience_texts.map((text, index) => ({
 				book,
