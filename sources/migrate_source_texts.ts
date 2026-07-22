@@ -53,27 +53,29 @@ export function migrate_source_texts(tabitha_sources_db: Database, tbta_sources_
 			const valid_rows = tbta_data_rows_per_table.filter(({ Reference }) => !!Reference)
 			
 			for (const tbta_row of valid_rows) {
-					const { Source, Reference, Verse, AnalyzedVerse, Notes } = tbta_row
+				const { Source, Reference, Verse, AnalyzedVerse, Notes } = tbta_row
 
-					// transforms something like "Community_Development_Texts" into "Community Development Texts"
-					const type = Source.replaceAll('_', ' ')
+				// transforms something like "Community_Development_Texts" into "Community Development Texts"
+				const type = Source.replaceAll('_', ' ')
 
-					// Extract Book, Chapter, and Verse integers out of legacy reference strings -> (e.g. "Daniel 3:9" -> ["Daniel", "3", "9"])
-					const [, id_primary, id_secondary, id_tertiary] = /(.*) (\d+):(\d+)/.exec(Reference) ?? [, '', 0, 0]
+				// Extract Book, Chapter, and Verse integers out of legacy reference strings -> (e.g. "Daniel 3:9" -> ["Daniel", "3", "9"])
+				const [, id_primary, id_secondary, id_tertiary] = /(.*) (\d+):(\d+)/.exec(Reference) ?? [, '', 0, 0]
 
-					const phase_1_encoding = (Verse ?? '').replace(/\r/g, '')
-					const semantic_encoding = (AnalyzedVerse ?? '').replace(/\r/g, '')
-					const notes = (Notes ?? '').replace(/\r/g, '')
+				// As of Jul '26, TBTA is allowing whitespace garbage in, so these defensive techniques are being used to clean the data up before entering Tabitha's tables.
+				const phase_1_encoding = (Verse ?? '').trim()
+				const semantic_encoding = AnalyzedVerse ?? ''
+				const notes = (Notes ?? '').replace(/\r/g, '').trim()
 
-					tabitha_sources_db.run(`
-						INSERT INTO Sources
-						VALUES (?, ?, ?, ?, ?, ?, '', ?)
-					`, [type, id_primary, id_secondary, id_tertiary, phase_1_encoding, semantic_encoding, notes])
+				tabitha_sources_db.run(`
+					INSERT INTO Sources
+					VALUES (?, ?, ?, ?, ?, ?, '', ?)
+				`, [type, id_primary, id_secondary, id_tertiary, phase_1_encoding, semantic_encoding, notes])
 			}
 
 			console.log(`\n${valid_rows.length} rows inserted.`)
 		})
 	})
+
 	console.log()
 	console.log('done.')
 }
