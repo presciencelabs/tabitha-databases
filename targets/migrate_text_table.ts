@@ -72,20 +72,27 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 		function transform({ Reference, Verse }: DbRow): TransformedData[] {
 			if (!Verse) return []
 
-			// References are expected to look like this: "Daniel 3:9"
+			// References are expected to look like this: "Daniel 3:9", "1 Chronicles 1:1", etc.
 			const [, book, chapter, verse] = /(.*) (\d+):(\d+)/.exec(Reference) ?? []
 
 			// Each audience text is separated on its own line, and may or may not be followed by annotated text marked with '~!~'
 			// A line may be blank if there is no saved text for that audience
-			const audience_texts = Verse.split(/\r?\n/).map(audience_text => audience_text.split('~!~')[0].trim())
+			return Verse
+				.split(/\r?\n/) // guarding against os-specific line endings
+				.flatMap(extract_audience_text) // used flatMap to combine line cleaning, audience mapping, and skipping blank lines in a single pass
 
-			return audience_texts.map((text, index) => ({
-				book,
-				chapter: Number(chapter),
-				verse: Number(verse),
-				audience: audience_names[index],
-				text,
-			})).filter(data => data.text)
+			function extract_audience_text(line: string, index: number): TransformedData[] {
+				const text = line.split('~!~')[0].trim()
+				if (!text) return []
+
+				return [{
+					book,
+					chapter: Number(chapter),
+					verse: Number(verse),
+					audience: audience_names[index],
+					text,
+				}]
+			}
 		}
 	}
 }
