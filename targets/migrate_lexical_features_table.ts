@@ -46,7 +46,7 @@ function transform_tbta_data(tbta_db: Database): TransformedData[] {
 	  `
 		const results = tbta_db.prepare<DbRow, []>(sql).all().map(row => ({
 			...row,
-			notes: row.notes.trim(), // sometimes notes start with non-printable characters or whitespace
+			notes: (row.notes ?? '').replace(/\r/g, '').trim(), // sometimes notes start with non-printable characters or whitespace
 		}))
 
 		console.log('done.')
