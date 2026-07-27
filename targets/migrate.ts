@@ -51,8 +51,11 @@ for (const tbta_db_name of tbta_db_names) {
         await migrate_lexical_forms(project, targets_db, './targets/inflections/csv')
     }
 
+    migrate_form_names_table(tbta_db, project, targets_db)
+    migrate_source_features_table(tbta_db, project, targets_db)
+    migrate_lexical_features_table(tbta_db, project, targets_db)
 
-    migrate_ideal_text_table(project, targets_db, './targets/ideal_texts')
+    await migrate_ideal_text_table(project, targets_db, './targets/ideal_texts')
 
     tbta_db.close()
 }

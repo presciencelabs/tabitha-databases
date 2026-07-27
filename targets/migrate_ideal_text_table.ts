@@ -24,19 +24,15 @@ function create_tabitha_table(targets_db: Database) {
 		)
 	`)
 
-	targets_db.run(`
-		DELETE FROM Ideal_Text
-	`)
-
 	console.log('done.')
 }
 
 function load_data(targets_db: Database, project: string, data: IdealTextData[]) {
-	console.log(`Loading ${project} data into the "Ideal_Text" table...`)
+	console.log(`Loading ${data.length} verses for ${project} into the "Ideal_Text" table...`)
 
 	data.map(async ({ book, chapter, verse, audience, text }) => {
 		targets_db.run(`
-			INSERT INTO Text (project, book, chapter, verse, audience, ideal_text)
+			INSERT INTO Ideal_Text (project, book, chapter, verse, audience, ideal_text)
 			VALUES (?, ?, ?, ?, ?, ?)
 		`, [project, book, chapter, verse, audience, text])
 
@@ -77,9 +73,7 @@ const title_tags: Record<string, string> = {
 	'Tagalog': 'Pamagat:',
 }
 
-async function get_ideal_texts(project: string, dir: string = '.'): Promise<IdealTextData[]> {
-	const texts_dir = join(dir, 'texts')
-
+async function get_ideal_texts(project: string, texts_dir: string): Promise<IdealTextData[]> {
 	const files = Array.from(new Glob(`${project}_*.{docx,sfm,SFM}`).scanSync(texts_dir))
 
 	const parser_map = new Map([
