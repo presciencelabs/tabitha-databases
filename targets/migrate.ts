@@ -5,6 +5,7 @@ import { migrate_source_features_table } from './migrate_source_features_table'
 import { migrate_lexical_forms } from './migrate_lexical_forms'
 import { migrate_lexicon_table } from './migrate_lexicon_table'
 import { migrate_text_table } from './migrate_text_table'
+import { migrate_ideal_text_table } from './migrate_ideal_text_table'
 import { transform_inflections } from './inflections/transform'
 import { basename } from 'path'
 
@@ -53,6 +54,8 @@ for (const tbta_db_name of tbta_db_names) {
     migrate_form_names_table(tbta_db, project, targets_db)
     migrate_source_features_table(tbta_db, project, targets_db)
     migrate_lexical_features_table(tbta_db, project, targets_db)
+
+    await migrate_ideal_text_table(project, targets_db, './targets/ideal_texts')
 
     tbta_db.close()
 }
