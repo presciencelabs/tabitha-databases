@@ -128,7 +128,7 @@ Merging into `main` will automatically make the workflow available on its schedu
 > *order coupling*
 >
 > * Bible -> Sources -> Ontology
-> * Inflections -> English -> Targets
+> * Inflections -> [English|Indonesian|other]... -> Targets
 
 ### Sources Migration
 

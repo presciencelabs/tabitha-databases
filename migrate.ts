@@ -23,45 +23,45 @@ type DbConfig = {
 	migration_output_file(): Promise<string>
 }
 const configs: DbConfig[] = [
-	{
-		key: 'Sources',
-		async migration_input_args() {
-			const sources = ['Bible', 'CommunityDevelopmentTexts', 'GrammarIntroduction']
+	// {
+	// 	key: 'Sources',
+	// 	async migration_input_args() {
+	// 		const sources = ['Bible', 'CommunityDevelopmentTexts', 'GrammarIntroduction']
 
-			const args = await Promise.all(
-				sources.map(async name => {
-					const match = migration_dbs.find(db => db.includes(name))
-					if (match) return match
+	// 		const args = await Promise.all(
+	// 			sources.map(async name => {
+	// 				const match = migration_dbs.find(db => db.includes(name))
+	// 				if (match) return match
 
-					const files = Array.from(new Glob(`databases/${name}_*.tbta.sqlite`).scanSync('.'))
-					files.sort() // lexicographical sort will serve correctly for YYYY-MM-DD
-					const latest = files.pop()
+	// 				const files = Array.from(new Glob(`databases/${name}_*.tbta.sqlite`).scanSync('.'))
+	// 				files.sort() // lexicographical sort will serve correctly for YYYY-MM-DD
+	// 				const latest = files.pop()
 
-					if (latest) console.log(`Source ${name} missing for ${date}, using: ${latest} instead.`)
+	// 				if (latest) console.log(`Source ${name} missing for ${date}, using: ${latest} instead.`)
 
-					return latest || ''
-				})
-			)
+	// 				return latest || ''
+	// 			})
+	// 		)
 
-			return args.filter(Boolean)
-		},
-		async migration_output_file() {
-			return `databases/${this.key}_${date}.tabitha.sqlite`
-		},
-	},
-	{
-		key: 'Ontology',
-		async migration_input_args() {
-			const sources = await configs.find(cfg => cfg.key === 'Sources')!.migration_output_file()
+	// 		return args.filter(Boolean)
+	// 	},
+	// 	async migration_output_file() {
+	// 		return `databases/${this.key}_${date}.tabitha.sqlite`
+	// 	},
+	// },
+	// {
+	// 	key: 'Ontology',
+	// 	async migration_input_args() {
+	// 		const sources = await configs.find(cfg => cfg.key === 'Sources')!.migration_output_file()
 
-			return [sources]
-		},
-		async migration_output_file() {
-			const ontology_db_name = Array.from(new Glob(`databases/Ontology_*_${date}.tabitha.sqlite`).scanSync('.'))[0] || ''
+	// 		return [sources]
+	// 	},
+	// 	async migration_output_file() {
+	// 		const ontology_db_name = Array.from(new Glob(`databases/Ontology_*_${date}.tabitha.sqlite`).scanSync('.'))[0] || ''
 
-			return ontology_db_name
-		},
-	},
+	// 		return ontology_db_name
+	// 	},
+	// },
 	{
 		key: 'Targets',
 		async migration_input_args() {
