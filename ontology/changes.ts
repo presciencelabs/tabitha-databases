@@ -5,6 +5,7 @@ export function create_changes_table(tabitha_db: Database) {
 
 	tabitha_db.run(`
 		CREATE TABLE IF NOT EXISTS Changes (
+			'id'								INTEGER PRIMARY KEY,
 			'concept_stem'					TEXT,
 			'concept_sense' 				TEXT,
 			'concept_part_of_speech'	TEXT,
