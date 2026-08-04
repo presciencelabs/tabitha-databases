@@ -1,6 +1,7 @@
 import Database from 'bun:sqlite'
 import { load_examples } from './exhaustive_examples/load'
 import { migrate_complex_terms_table } from './migrate_complex_terms_table'
+import { create_changes_table } from './changes'
 
 // usage: `bun ontology/migrate.ts databases/Sources_YYYY-MM-DD.tabitha.sqlite databases/Ontology_VERSION_YYYY-MM-DD.tabitha.sqlite`
 if (Bun.argv.length !== 4) {
@@ -14,6 +15,8 @@ const tabitha_db = new Database(tabitha_db_name, { create: false, readwrite: tru
 tabitha_db.run('PRAGMA journal_mode = WAL')
 
 await migrate_complex_terms_table(tabitha_db)
+
+create_changes_table(tabitha_db)
 
 const sources_db_name = Bun.argv[2]	// databases/Sources_YYYY-MM-DD.tabitha.sqlite
 console.log(`[Ontology migration] Opening Sources database: ${sources_db_name}`)
