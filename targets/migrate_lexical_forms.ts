@@ -86,7 +86,7 @@ async function load_data(word_forms: WordFormMap, targets_db: Database, project:
 			const from_lexicon = lexicon_words[from_word_forms.sequence_number - 1]
 
 			if (is_match({ from_word_forms, from_lexicon })) {
-				await targets_db.run(`
+				targets_db.run(`
 					UPDATE Lexicon
 					SET forms = ?
 					WHERE project = ?
