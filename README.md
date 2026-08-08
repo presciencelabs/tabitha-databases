@@ -69,24 +69,7 @@ Databases can be diffed using sqldiff (<https://www.sqlite.org/sqldiff.html>), M
 
 ### Ontology
 
-> ℹ️ The `DB_Ontology` binding for the `sync_complex_terms` Worker is automatically kept in sync with the root configuration by `migrate.ts` when a new Ontology is created.
-
-### Complex Terms
-
-Complex terms will be updated from the "How to" spreadsheet to the database on a regular schedule.
-
-#### Testing Complex Terms locally
-
-`bun wrangler --config ontology/wrangler.jsonc dev --test-scheduled`
-
- Hit `curl 'http://localhost.tabitha.bible:8787/__scheduled'` in a separate terminal to run it.
-
-#### Deploying Complex Terms
-
-1. Ensure the correct database binding is set in `ontology/wrangler.jsonc`
-1. Commit and push, deployment will occur automatically
-
-> ℹ️ `bun wrangler --config ontology/wrangler.jsonc deploy`
+> ℹ️ Complex terms sync and initial post-provisioning sync are managed directly by the [`tabitha-ontology`](https://github.com/presciencelabs/tabitha-ontology) application.
 
 ### Sources
 
