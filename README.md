@@ -2,6 +2,14 @@
 
 <https://www.sqlite.org>
 
+## Package Management
+
+This project uses [Bun](https://bun.sh) for dependency management and script execution.
+
+- **Install dependencies:** `bun install`
+- **Add a package:** `bun add <package-name>`
+- **Update dependencies:** `bun update`
+
 ## Interacting with a database locally
 
 ### GUI
