@@ -100,11 +100,6 @@ for (const cfg of configs) {
 	const new_db_info = extract_new_db_info(cmd_output_new_db)
 	await update_deployment_config('./wrangler.jsonc', new_db_info, `DB_${cfg.key}`)
 
-	if (cfg.key === 'Ontology') {
-		console.log(`Syncing DB_Ontology binding to ontology/wrangler.jsonc...`)
-		await update_deployment_config('./ontology/wrangler.jsonc', new_db_info, `DB_${cfg.key}`)
-	}
-
 	console.log(`Deploying new ${cfg.key} data to D1...`)
 	await $`bun wrangler d1 execute ${d1_db_name} --file ${output_file}.sql --remote`.quiet()
 }
