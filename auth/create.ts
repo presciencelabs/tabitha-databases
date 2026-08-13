@@ -43,6 +43,7 @@ function create_permissions_table(db: Database) {
 		[2, 'ontology', 'ADD_CONCEPT'],
 		[3, 'ontology', 'UPDATE_CONCEPT'],
 		[4, 'ontology', 'DELETE_CONCEPT'],
+		[5, 'ontology', 'PUBLISH'],
 	])
 }
 
